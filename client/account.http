@@ -1,0 +1,9 @@
+POST {{host}}/api/v1/accounts
+Content-Type: application/json
+
+{
+  "email":"joon@naver.com",
+  "password":"12345678910",
+  "name":"준",
+  "gender":"MAN"
+}
