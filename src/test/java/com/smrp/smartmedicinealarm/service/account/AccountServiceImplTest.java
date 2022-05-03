@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.service.account;
 
+import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
 import com.smrp.smartmedicinealarm.entity.Account;
 import com.smrp.smartmedicinealarm.entity.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.Gender;
@@ -19,9 +20,12 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.*;
 import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Request.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -92,5 +96,57 @@ class AccountServiceImplTest {
         verify(passwordUtils).encode(anyString());
         verify(accountRepository).existsByEmail(eq(email));
         verify(accountRepository, never()).save(any(Account.class));
+    }
+
+    @Test
+    @DisplayName("[성공] 사용자 상세 조회 ")
+    public void givenAccountId_whenAccountDetails_thenReturnAccountDetailsDto(){
+        //given
+        long accountId = 1L;
+        String email = "joon@naver.com";
+        String rawPassword = "abcdefghi1234";
+        String name = "joon";
+        Gender gender = Gender.MAN;
+
+        when(accountRepository.findById(anyLong()))
+                .thenReturn(
+                        Optional.of(
+                                createAccount(accountId, email, rawPassword, name, gender)
+                        )
+                );
+
+        //when
+        AccountDetailsDto accountDetailsDto = accountService.findAccount(accountId);
+
+        //then
+        assertThat(accountDetailsDto)
+                .hasFieldOrPropertyWithValue("accountId", accountId)
+                .hasFieldOrPropertyWithValue("email", email)
+                .hasFieldOrPropertyWithValue("name", name)
+                .hasFieldOrPropertyWithValue("gender", gender)
+                .hasFieldOrPropertyWithValue("status", AccountStatus.USE)
+                .hasFieldOrPropertyWithValue("role", Role.NORMAL)
+            ;
+        verify(accountRepository).findById(eq(accountId));
+    }
+
+    @Test
+    @DisplayName("[실패] 사용자 상세 조회 - 잘못된 accountId ")
+    public void givenNotfoundAccountId_whenAccountDetails_thenUserException_whenAccountDetails(){
+        //given
+        final UserErrorCode errorCode = UserErrorCode .NOT_FOUND_USER_ID;
+            long notfoundAccountId = 9999L;
+        //when
+        final UserException exception = assertThrows(UserException.class,
+            () -> accountService.findAccount(notfoundAccountId)
+        )
+        ;
+        //then
+        assertAll(
+            () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+            () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+        );
+
+        verify(accountRepository).findById(eq(notfoundAccountId));
     }
 }

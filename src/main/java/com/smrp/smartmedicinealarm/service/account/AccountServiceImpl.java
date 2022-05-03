@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.service.account;
 
+import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.entity.Account;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
@@ -9,6 +10,8 @@ import com.smrp.smartmedicinealarm.utils.PasswordUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 
 @Service
@@ -55,5 +58,23 @@ public class AccountServiceImpl implements AccountService {
 
     private boolean isExists(Account account) {
         return accountRepository.existsByEmail(account.getEmail());
+    }
+
+    /** 계정 상세 조회*/
+    @Override
+    public AccountDetailsDto findAccount(Long accountId) {
+        // 계정 조회
+        Account findAccount = getAccountById(accountId);
+
+        // DTO로 변환
+        return AccountDetailsDto.fromEntity(findAccount);
+
+    }
+
+    private Account getAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(
+                        () -> new UserException(UserErrorCode.NOT_FOUND_USER_ID)
+                );
     }
 }
