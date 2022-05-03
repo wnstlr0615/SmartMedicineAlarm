@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.service.account;
 
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
+import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.entity.Account;
 import com.smrp.smartmedicinealarm.entity.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.Gender;
@@ -9,6 +10,7 @@ import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
 import com.smrp.smartmedicinealarm.utils.PasswordUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,14 +18,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.*;
 import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Request.*;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -148,5 +157,44 @@ class AccountServiceImplTest {
         );
 
         verify(accountRepository).findById(eq(notfoundAccountId));
+    }
+
+    @Test
+    @DisplayName("[성공] 사용자 전체 조회")
+    public void givenPageAndSize_whenAccountList_thenReturnPagingSimpleAccounts(){
+        //given
+        int page = 0;
+        int size = 10;
+        List<Account> accountList = createAccountListIterate(10);
+        when(accountRepository.findAll(any(Pageable.class)))
+                .thenReturn(
+                        new PageImpl<>(accountList, PageRequest.of(page, size), 20)
+                );
+        //when
+        Page<SimpleAccountDto> simpleAccountDtos = accountService.findAllAccounts(page, size);
+
+        //then
+        assertAll(
+                () -> assertThat(simpleAccountDtos.getTotalElements()).isEqualTo(20),
+                () -> assertThat(simpleAccountDtos.getTotalPages()).isEqualTo(2),
+                () -> assertThat(simpleAccountDtos.getContent().get(0).getAccountId()).isEqualTo(1L),
+                () -> assertThat(simpleAccountDtos.getContent().get(0).getEmail()).isEqualTo("joon1@naver.com"),
+                () -> assertThat(simpleAccountDtos.getContent().get(0).getName()).isEqualTo("minsu1"),
+                () -> assertThat(simpleAccountDtos.getContent().get(0).getGender()).isEqualTo(Gender.MAN)
+        );
+        verify(accountRepository).findAll(any(Pageable.class));
+    }
+
+    private List<Account> createAccountListIterate(int endInclusive) {
+        return IntStream.rangeClosed(1, endInclusive)
+                .mapToObj(this::createAccount)
+                .collect(toList());
+    }
+
+    private Account createAccount(int i) {
+        Long idx = (long) i;
+        String email = "joon" + idx + "@naver.com";
+        String name = "minsu" + idx;
+        return Account.createAccount(idx, email, "abecasdas", name, Gender.MAN, AccountStatus.USE, Role.NORMAL);
     }
 }

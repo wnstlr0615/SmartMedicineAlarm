@@ -2,12 +2,15 @@ package com.smrp.smartmedicinealarm.service.account;
 
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
+import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.entity.Account;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
 import com.smrp.smartmedicinealarm.utils.PasswordUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,6 +72,13 @@ public class AccountServiceImpl implements AccountService {
         // DTO로 변환
         return AccountDetailsDto.fromEntity(findAccount);
 
+    }
+
+    @Override
+    public Page<SimpleAccountDto> findAllAccounts(int page, int size) {
+        return accountRepository.findAll(
+                PageRequest.of(page, size)
+                ).map(SimpleAccountDto::fromEntity);
     }
 
     private Account getAccountById(Long accountId) {

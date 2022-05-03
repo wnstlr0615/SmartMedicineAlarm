@@ -3,6 +3,8 @@ package com.smrp.smartmedicinealarm.controller;
 import com.smrp.smartmedicinealarm.annotation.NormalUser;
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
+import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
+import com.smrp.smartmedicinealarm.entity.Account;
 import com.smrp.smartmedicinealarm.entity.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.Gender;
 import com.smrp.smartmedicinealarm.entity.Role;
@@ -13,13 +15,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.List;
+import java.util.stream.IntStream;
+
 import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Request.createNewAccountDtoRequest;
 import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Response.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static java.util.stream.Collectors.toList;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -151,6 +158,55 @@ class AccountControllerTest extends BaseControllerTest{
 
         ;
         verify(accountService).findAccount(anyLong());
+    }
+
+    @Test
+    @NormalUser
+    @DisplayName("[성공] 사용자 전체 조회")
+    public void givenPageAndSize_whenAccountList_thenReturnPagingSimpleAccounts() throws Exception{
+        //given
+        String page = "0";
+        String size = "10";
+        List<SimpleAccountDto> content = createSimpleAccountListIterate(10);
+        when(accountService.findAllAccounts(anyInt(), anyInt()))
+                .thenReturn(
+                        new PageImpl<>(
+                                content
+                                , PageRequest.of(0, 10)
+                                , 20)
+                );
+        //when //then
+
+        mvc.perform(get("/api/v1/accounts")
+            .queryParam("page", page)
+            .queryParam("size", size)
+            .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andDo(print())
+            .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.items[0].accountId").value(1L))
+                .andExpect(jsonPath("$._embedded.items[0].email").value("joon1@naver.com"))
+                .andExpect(jsonPath("$._embedded.items[0].name").value("minsu1"))
+                .andExpect(jsonPath("$._embedded.items[0].gender").value(Gender.MAN.name()))
+                .andExpect(jsonPath("$.page.size").value(10))
+                .andExpect(jsonPath("$.page.totalElements").value(20))
+                .andExpect(jsonPath("$.page.totalPages").value(2))
+                .andExpect(jsonPath("$.page.number").value(0))
+        ;
+        verify(accountService).findAllAccounts(anyInt(), anyInt());
+    }
+
+    private List<SimpleAccountDto> createSimpleAccountListIterate(int endInclusive) {
+        return IntStream.rangeClosed(1, endInclusive)
+                        .mapToObj(this::createSimpleAccountDto)
+                        .collect(toList());
+    }
+
+    private SimpleAccountDto createSimpleAccountDto(int i) {
+        Long idx = (long) i;
+        String email = "joon" + idx + "@naver.com";
+        String name = "minsu" + idx;
+        return SimpleAccountDto.createSimpleAccountDto(idx, email, name, Gender.MAN);
     }
 
 }
