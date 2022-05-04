@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @ExtendWith(MockitoExtension.class)
 class JWTUtilsTest {
     final String key = "key";
+    JWTUtils jwtUtils = new JWTUtils();
     @Test
     @DisplayName("[성공] JWT 토큰 생성")
     public void successCreateToken (){
@@ -26,7 +27,7 @@ class JWTUtilsTest {
         String username = "joon@naver.com";
 
         //when
-        String token = JWTUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
+        String token = jwtUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
 
         // then
         assertThat(token).isNotBlank();
@@ -42,7 +43,7 @@ class JWTUtilsTest {
 
         //when
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> JWTUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key))
+                () -> jwtUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key))
         );
 
         // then
@@ -55,10 +56,10 @@ class JWTUtilsTest {
         //given
         Duration accessExpiredTime = Duration.ofHours(1);
         String username = "joon@naver.com";
-        String token = JWTUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
+        String token = jwtUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
 
         //when //then
-        assertThat(JWTUtils.verifyToken(token, key)).isEqualTo(username);
+        assertThat(jwtUtils.verifyToken(token, key)).isEqualTo(username);
 
     }
 
@@ -69,11 +70,11 @@ class JWTUtilsTest {
         LoginErrorCode errorCode = LoginErrorCode.TOKEN_IS_EXPIRED_OR_WRONG;
         Duration accessExpiredTime = Duration.ofSeconds(-1);
         String username = "joon@naver.com";
-        String token = JWTUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
+        String token = jwtUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
 
         //when
         LoginException loginException = assertThrows(LoginException.class,
-                () -> JWTUtils.verifyToken(token, key)
+                () -> jwtUtils.verifyToken(token, key)
         );
 
         //then
