@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.controller;
 
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
+import com.smrp.smartmedicinealarm.dto.account.AccountModifyDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.service.account.AccountService;
@@ -57,6 +58,17 @@ public class AccountController {
             @PathVariable Long deletedId
     ){
         accountService.removeAccount(deletedId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/{accountId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> accountModify(
+            @ApiParam(value ="사용자 PK")
+            @PathVariable Long accountId,
+            @Valid @RequestBody AccountModifyDto accountModifyDto,
+            BindingResult error
+    ){
+        accountService.modifyAccount(accountId, accountModifyDto);
         return ResponseEntity.ok().build();
     }
 

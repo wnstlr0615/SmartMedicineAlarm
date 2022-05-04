@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @WithMockUser(username = "joon@naver.com", roles = "NORMAL")
-public @interface NormalUser {
+public @interface MockNormalUser {
 }

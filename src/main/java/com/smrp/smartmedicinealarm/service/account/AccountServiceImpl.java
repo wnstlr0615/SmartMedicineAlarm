@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.service.account;
 
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
+import com.smrp.smartmedicinealarm.dto.account.AccountModifyDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.entity.Account;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 import static com.smrp.smartmedicinealarm.error.code.UserErrorCode.ALREADY_DELETED_ACCOUNT;
+import static com.smrp.smartmedicinealarm.error.code.UserErrorCode.CAN_NOT_UPDATE_ACCOUNT_INFO;
 
 
 @Service
@@ -90,7 +92,7 @@ public class AccountServiceImpl implements AccountService {
                         () -> new UserException(UserErrorCode.NOT_FOUND_USER_ID)
                 );
     }
-
+    /** 계정 삭제 처리*/
     @Override
     @Transactional
     public void removeAccount(Long deletedId) {
@@ -106,5 +108,30 @@ public class AccountServiceImpl implements AccountService {
             throw new UserException(ALREADY_DELETED_ACCOUNT);
         }
         account.remove();
+    }
+
+    /** 계정 업데이트*/
+    @Override
+    @Transactional
+    public void modifyAccount(Long accountId, AccountModifyDto accountModifyDto) {
+        //사용자 조회
+        Account account = getAccountById(accountId);
+
+        //계정 업데이트
+        updateAccountInfo(account, accountModifyDto);
+    }
+
+    private void updateAccountInfo(Account account, AccountModifyDto accountModifyDto) {
+        //업데이트 가능한  상테 검증
+        verifyAccountStatusUpdatable(account);
+
+        account.updateInfo(accountModifyDto.getName(), accountModifyDto.getGender());
+    }
+
+    private void verifyAccountStatusUpdatable(Account account) {
+        if(account.getStatus().equals(AccountStatus.DELETED)
+                || account.getStatus().equals(AccountStatus.DORMANT)){
+            throw new UserException(CAN_NOT_UPDATE_ACCOUNT_INFO);
+        }
     }
 }

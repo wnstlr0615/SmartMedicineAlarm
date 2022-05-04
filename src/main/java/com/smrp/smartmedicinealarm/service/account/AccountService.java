@@ -1,12 +1,10 @@
 package com.smrp.smartmedicinealarm.service.account;
 
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
+import com.smrp.smartmedicinealarm.dto.account.AccountModifyDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 public interface AccountService {
     /** 회원 가입 */
@@ -20,4 +18,7 @@ public interface AccountService {
 
     /** 사용자 삭제 */
     void removeAccount(Long deletedId);
+
+    /** 사용자 정보 업데이트*/
+    void modifyAccount(Long accountId, AccountModifyDto accountModifyDto);
 }

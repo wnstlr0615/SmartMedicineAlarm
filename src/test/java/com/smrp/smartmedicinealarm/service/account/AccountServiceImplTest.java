@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.service.account;
 
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
+import com.smrp.smartmedicinealarm.dto.account.AccountModifyDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.entity.Account;
 import com.smrp.smartmedicinealarm.entity.AccountStatus;
@@ -251,5 +252,97 @@ class AccountServiceImplTest {
         );
 
         verify(accountRepository).findById(eq(deleteId));
+    }
+    @Test
+    @DisplayName("[성공] 사용자 계정 업데이트")
+    public void givenAccountModifyDto_whenModifyAccount_thenNothing(){
+        //given
+        long accountId = 1L;
+        AccountModifyDto accountModifyDto = AccountModifyDto.createAccountModifyDto("민정", Gender.WOMAN);
+        Account account = createAccount(accountId, "민수", Gender.MAN, AccountStatus.USE);
+
+        when(accountRepository.findById(accountId))
+                .thenReturn(
+                        Optional.of(
+                                account
+                        )
+                );
+        //when
+        accountService.modifyAccount(accountId, accountModifyDto);
+
+        //then
+        assertAll(
+                () -> assertThat(account.getName()).isEqualTo("민정"),
+                () -> assertThat(account.getGender()).isEqualTo(Gender.WOMAN)
+        );
+        verify(accountRepository).findById(eq(accountId));
+    }
+
+    private Account createAccount(long accountId, String name, Gender gender, AccountStatus status) {
+        String email = String.format("joon%d@naver.com", accountId);
+        return Account.createAccount(accountId, email, "abecasdas", name, gender, status, Role.NORMAL);
+    }
+
+
+    @Test
+    @DisplayName("[실패] 사용자 계정 업데이트 - 삭제된 계정인 경우")
+    public void givenDeleteId_whenModifyAccount_thenUserException(){
+        //given
+        final UserErrorCode errorCode = UserErrorCode.CAN_NOT_UPDATE_ACCOUNT_INFO;
+
+        long accountId = 1L;
+        AccountModifyDto accountModifyDto = AccountModifyDto.createAccountModifyDto("민정", Gender.WOMAN);
+        Account account = createAccount(accountId, "민수", Gender.MAN, AccountStatus.DELETED);
+
+        when(accountRepository.findById(accountId))
+                .thenReturn(
+                        Optional.of(
+                                account
+                        )
+                );
+
+        //when
+        final UserException  exception = assertThrows(UserException.class,
+            () ->  accountService.modifyAccount(accountId, accountModifyDto)
+        )
+        ;
+        //then
+        assertAll(
+            () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+            () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+        );
+        verify(accountRepository).findById(eq(accountId));
+
+    }
+
+    @Test
+    @DisplayName("[실패] 사용자 계정 업데이트 - 휴먼 계정인 경우")
+    public void givenDorantId_whenModifyAccount_thenUserException(){
+        //given
+        final UserErrorCode errorCode = UserErrorCode.CAN_NOT_UPDATE_ACCOUNT_INFO;
+
+        long accountId = 1L;
+        AccountModifyDto accountModifyDto = AccountModifyDto.createAccountModifyDto("민정", Gender.WOMAN);
+        Account account = createAccount(accountId, "민수", Gender.MAN, AccountStatus.DORMANT);
+
+        when(accountRepository.findById(accountId))
+                .thenReturn(
+                        Optional.of(
+                                account
+                        )
+                );
+
+        //when
+        final UserException  exception = assertThrows(UserException.class,
+                () ->  accountService.modifyAccount(accountId, accountModifyDto)
+        )
+                ;
+        //then
+        assertAll(
+                () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+                () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+        );
+        verify(accountRepository).findById(eq(accountId));
+
     }
 }

@@ -56,7 +56,14 @@ public class Account {
         this.password = bcryptPassword;
     }
 
+    //== 사용자 계정 삭제 ==//
     public void remove() {
         status = AccountStatus.DELETED;
+    }
+
+    //== 사용자 정보 업데이트 ==//
+    public void updateInfo(String name, Gender gender) {
+        this.name = name;
+        this.gender = gender;
     }
 }

@@ -1,12 +1,14 @@
 package com.smrp.smartmedicinealarm.controller;
 
-import com.smrp.smartmedicinealarm.annotation.NormalUser;
+import com.smrp.smartmedicinealarm.annotation.MockNormalUser;
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
+import com.smrp.smartmedicinealarm.dto.account.AccountModifyDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.entity.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.Gender;
 import com.smrp.smartmedicinealarm.entity.Role;
+import com.smrp.smartmedicinealarm.error.code.ErrorCode;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.service.account.AccountService;
@@ -101,7 +103,7 @@ class AccountControllerTest extends BaseControllerTest{
 
 
     @Test
-    @NormalUser
+    @MockNormalUser
     @DisplayName("[GET][성공] 사용자 상세 조회")
     public void givenAccountId_whenAccountDetails_thenReturnAccountDetailsDto() throws Exception {
         //given
@@ -134,7 +136,7 @@ class AccountControllerTest extends BaseControllerTest{
     }
 
     @Test
-    @NormalUser
+    @MockNormalUser
     @DisplayName("[GET][실패] 사용자 상세 조회 - 등록되지 않는 accountId로 조회")
     public void givenNotFoundAccountId_whenAccountDetails_thenUserException() throws Exception {
         //given
@@ -158,7 +160,7 @@ class AccountControllerTest extends BaseControllerTest{
     }
 
     @Test
-    @NormalUser
+    @MockNormalUser
     @DisplayName("[성공] 사용자 전체 조회")
     public void givenPageAndSize_whenAccountList_thenReturnPagingSimpleAccounts() throws Exception{
         //given
@@ -207,7 +209,7 @@ class AccountControllerTest extends BaseControllerTest{
     }
 
     @Test
-    @NormalUser
+    @MockNormalUser
     @DisplayName("[DELETE][성공] 사용자 계정 삭제 처리")
     public void givenDeleteId_whenAccountRemove_thenStatusIsOk() throws Exception{
         //given
@@ -225,7 +227,7 @@ class AccountControllerTest extends BaseControllerTest{
     }
 
     @Test
-    @NormalUser
+    @MockNormalUser
     @DisplayName("[DELETE][실패] 사용자 계정 삭제 처리 - 이미 제거한 경우")
     public void givenAlreadyDeleteId_whenAccountRemove_thenUserException() throws Exception{
         //given
@@ -244,4 +246,58 @@ class AccountControllerTest extends BaseControllerTest{
         ;
         verify(accountService).removeAccount(eq(alreadyDeleteId));
     }
+
+    @Test
+    @MockNormalUser
+    @DisplayName("[성공][PUT] 사용자 계정 업데이트")
+    public void givenAccountModifyDto_whenAccountModify_thenStatusIsOk() throws Exception{
+        //given
+        long accountId = 1L;
+        doNothing().when(accountService)
+                        .modifyAccount(anyLong(), any(AccountModifyDto.class));
+        //when //then
+        mvc.perform(put("/api/v1/accounts/{accountId}", accountId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(
+                    mapper.writeValueAsString(
+                            AccountModifyDto.createAccountModifyDto("민정", Gender.WOMAN)
+                    )
+            )
+        )
+            .andDo(print())
+            .andExpect(status().isOk())
+        ;
+        verify(accountService).modifyAccount(eq(accountId), any(AccountModifyDto.class));
+    }
+
+    @Test
+    @MockNormalUser
+    @DisplayName("[실패][PUT] 사용자 계정 업데이트 - 삭제된 계정이거나 휴먼 계정인 경우")
+    public void givenDeletedAccountIdAndAccountModifyDto_whenAccountModify_thenUserException() throws Exception{
+        //given
+        long accountId = 1L;
+        ErrorCode errorCode = UserErrorCode.CAN_NOT_UPDATE_ACCOUNT_INFO;
+        doThrow(new UserException(UserErrorCode.CAN_NOT_UPDATE_ACCOUNT_INFO))
+                .when(accountService)
+                .modifyAccount(anyLong(), any(AccountModifyDto.class));
+
+        //when //then
+        mvc.perform(put("/api/v1/accounts/{accountId}", accountId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                mapper.writeValueAsString(
+                                        AccountModifyDto.createAccountModifyDto("민정", Gender.WOMAN)
+                                )
+                        )
+                )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value(errorCode.toString()))
+                .andExpect(jsonPath("$.errorMessage").value(errorCode.getDescription()))
+        ;
+        verify(accountService).modifyAccount(eq(accountId), any(AccountModifyDto.class));
+    }
+
+
+
 }
