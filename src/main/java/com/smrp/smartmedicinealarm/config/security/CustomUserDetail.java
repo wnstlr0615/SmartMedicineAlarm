@@ -14,7 +14,6 @@ import java.util.Set;
 public class CustomUserDetail extends User {
     private final Account account;
 
-
     public CustomUserDetail(Account account) {
         super(account.getEmail(), account.getPassword(), getAuthority(account.getRole()));
         this.account = account;
