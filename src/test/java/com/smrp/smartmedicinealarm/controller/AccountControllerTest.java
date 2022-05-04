@@ -4,7 +4,6 @@ import com.smrp.smartmedicinealarm.annotation.NormalUser;
 import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
-import com.smrp.smartmedicinealarm.entity.Account;
 import com.smrp.smartmedicinealarm.entity.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.Gender;
 import com.smrp.smartmedicinealarm.entity.Role;
@@ -24,13 +23,11 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Request.createNewAccountDtoRequest;
-import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Response.*;
+import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Response.createNewAccountDtoResponse;
 import static java.util.stream.Collectors.toList;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -209,4 +206,42 @@ class AccountControllerTest extends BaseControllerTest{
         return SimpleAccountDto.createSimpleAccountDto(idx, email, name, Gender.MAN);
     }
 
+    @Test
+    @NormalUser
+    @DisplayName("[DELETE][성공] 사용자 계정 삭제 처리")
+    public void givenDeleteId_whenAccountRemove_thenStatusIsOk() throws Exception{
+        //given
+        long deleteId = 1L;
+
+        doNothing().when(accountService)
+                        .removeAccount(anyLong());
+        //when //then
+        mvc.perform(delete("/api/v1/accounts/{deleteId}", deleteId)
+        )
+            .andDo(print())
+            .andExpect(status().isOk())
+        ;
+        verify(accountService).removeAccount(eq(deleteId));
+    }
+
+    @Test
+    @NormalUser
+    @DisplayName("[DELETE][실패] 사용자 계정 삭제 처리 - 이미 제거한 경우")
+    public void givenAlreadyDeleteId_whenAccountRemove_thenUserException() throws Exception{
+        //given
+        long alreadyDeleteId = 1L;
+
+        UserErrorCode errorCode = UserErrorCode.ALREADY_DELETED_ACCOUNT;
+        doThrow(new UserException(errorCode)).when(accountService)
+                .removeAccount(anyLong());
+        //when //then
+        mvc.perform(delete("/api/v1/accounts/{deleteId}", alreadyDeleteId)
+                )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value(errorCode.name()))
+                .andExpect(jsonPath("$.errorMessage").value(errorCode.getDescription()))
+        ;
+        verify(accountService).removeAccount(eq(alreadyDeleteId));
+    }
 }

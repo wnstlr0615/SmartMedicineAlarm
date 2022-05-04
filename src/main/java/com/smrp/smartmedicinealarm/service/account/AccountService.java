@@ -15,5 +15,9 @@ public interface AccountService {
     /** 사용자 상세 조회*/
     AccountDetailsDto findAccount(Long accountId);
 
+    /** 사용자 전체 조회*/
     Page<SimpleAccountDto> findAllAccounts(int page, int size);
+
+    /** 사용자 삭제 */
+    void removeAccount(Long deletedId);
 }

@@ -4,6 +4,7 @@ import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.entity.Account;
+import com.smrp.smartmedicinealarm.entity.AccountStatus;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+
+import static com.smrp.smartmedicinealarm.error.code.UserErrorCode.ALREADY_DELETED_ACCOUNT;
 
 
 @Service
@@ -86,5 +89,22 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(
                         () -> new UserException(UserErrorCode.NOT_FOUND_USER_ID)
                 );
+    }
+
+    @Override
+    @Transactional
+    public void removeAccount(Long deletedId) {
+        //계정 조회
+        Account account = getAccountById(deletedId);
+
+        //삭제 처리
+        deleteAccount(account);
+    }
+
+    private void deleteAccount(Account account) {
+        if(account.getStatus().equals(AccountStatus.DELETED)){
+            throw new UserException(ALREADY_DELETED_ACCOUNT);
+        }
+        account.remove();
     }
 }

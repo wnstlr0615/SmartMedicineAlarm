@@ -55,4 +55,8 @@ public class Account {
     public void setBcryptPassword(String bcryptPassword){
         this.password = bcryptPassword;
     }
+
+    public void remove() {
+        status = AccountStatus.DELETED;
+    }
 }

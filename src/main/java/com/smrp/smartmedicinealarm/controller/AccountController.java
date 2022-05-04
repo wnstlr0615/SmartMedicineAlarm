@@ -10,6 +10,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -48,4 +49,16 @@ public class AccountController {
                 accountService.findAllAccounts(page, size)
         );
     }
+
+    @PreAuthorize("hasRole('NORMAL')")
+    @DeleteMapping("/{deletedId}")
+    public ResponseEntity<?> accountRemove(
+            @ApiParam(value = "삭제할 유저 PK")
+            @PathVariable Long deletedId
+    ){
+        accountService.removeAccount(deletedId);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

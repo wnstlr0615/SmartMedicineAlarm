@@ -10,7 +10,6 @@ import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
 import com.smrp.smartmedicinealarm.utils.PasswordUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -30,8 +28,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.*;
-import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Request.*;
+import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Request;
+import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Request.createNewAccountDtoRequest;
+import static com.smrp.smartmedicinealarm.dto.account.NewAccountDto.Response;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -191,10 +190,66 @@ class AccountServiceImplTest {
                 .collect(toList());
     }
 
-    private Account createAccount(int i) {
-        Long idx = (long) i;
+    private Account createAccount(long idx) {
+        return createAccount(idx, AccountStatus.USE);
+    }
+
+    private Account createAccount(long idx, AccountStatus status) {
         String email = "joon" + idx + "@naver.com";
         String name = "minsu" + idx;
-        return Account.createAccount(idx, email, "abecasdas", name, Gender.MAN, AccountStatus.USE, Role.NORMAL);
+        return Account.createAccount(idx, email, "abecasdas", name, Gender.MAN, status, Role.NORMAL);
+    }
+
+    @Test
+    @DisplayName("[성공] 사용자 계정 삭제 처리")
+    public void givenDeleteId_whenRemoveAccount_thenNothing(){
+        //given
+        long deleteId = 1L;
+        Account account = createAccount(deleteId);
+        AccountStatus beforeStatus = account.getStatus();
+        when(accountRepository.findById(anyLong()))
+                .thenReturn(
+                        Optional.of(
+                                account
+                        )
+                );
+
+        //when
+        accountService.removeAccount(deleteId);
+
+        //then
+        assertAll(
+                () -> assertThat(beforeStatus).isEqualTo(AccountStatus.USE),
+                () -> assertThat(account.getStatus()).isEqualTo(AccountStatus.DELETED)
+        );
+        verify(accountRepository).findById(eq(deleteId));
+    }
+
+    @Test
+    @DisplayName("[실패] 사용자 계정 삭제 처리 - 이미 삭제된 계정")
+    public void givenAlreadyDeleteId_whenRemoveAccount_thenUserException(){
+        //given
+        UserErrorCode errorCode = UserErrorCode.ALREADY_DELETED_ACCOUNT;
+        long deleteId = 1L;
+        Account account = createAccount(deleteId, AccountStatus.DELETED);
+        when(accountRepository.findById(anyLong()))
+                .thenReturn(
+                        Optional.of(
+                                account
+                        )
+                );
+
+        //when
+        UserException userException = assertThrows(UserException.class,
+                () -> accountService.removeAccount(deleteId)
+        );
+
+        //then
+        assertAll(
+                () -> assertThat(userException.getErrorCode()).isEqualTo(errorCode),
+                () -> assertThat(userException.getMessage()).isEqualTo(errorCode.getDescription())
+        );
+
+        verify(accountRepository).findById(eq(deleteId));
     }
 }
