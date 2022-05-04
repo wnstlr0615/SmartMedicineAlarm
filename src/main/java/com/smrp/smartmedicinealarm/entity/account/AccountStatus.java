@@ -1,4 +1,4 @@
-package com.smrp.smartmedicinealarm.entity;
+package com.smrp.smartmedicinealarm.entity.account;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

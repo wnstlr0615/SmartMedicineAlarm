@@ -1,6 +1,6 @@
 package com.smrp.smartmedicinealarm.dto.account;
 
-import com.smrp.smartmedicinealarm.entity.Gender;
+import com.smrp.smartmedicinealarm.entity.account.Gender;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 

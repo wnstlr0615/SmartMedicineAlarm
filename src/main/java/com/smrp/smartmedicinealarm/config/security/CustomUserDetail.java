@@ -1,7 +1,7 @@
 package com.smrp.smartmedicinealarm.config.security;
 
-import com.smrp.smartmedicinealarm.entity.Account;
-import com.smrp.smartmedicinealarm.entity.Role;
+import com.smrp.smartmedicinealarm.entity.account.Account;
+import com.smrp.smartmedicinealarm.entity.account.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -1,12 +1,12 @@
-package com.smrp.smartmedicinealarm.entity;
+package com.smrp.smartmedicinealarm.entity.account;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public enum Role {
-    NORMAL("일반 계정"), ADMIN("관리자 계정")
+public enum Gender {
+    MAN("남자"), WOMAN("여자")
     ;
     private final String description;
 }

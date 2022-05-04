@@ -1,6 +1,5 @@
-package com.smrp.smartmedicinealarm.entity;
+package com.smrp.smartmedicinealarm.entity.account;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 
 import javax.persistence.*;

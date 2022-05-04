@@ -1,6 +1,6 @@
 package com.smrp.smartmedicinealarm.repository;
 
-import com.smrp.smartmedicinealarm.entity.Account;
+import com.smrp.smartmedicinealarm.entity.account.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

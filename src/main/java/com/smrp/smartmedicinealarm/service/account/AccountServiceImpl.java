@@ -4,8 +4,8 @@ import com.smrp.smartmedicinealarm.dto.account.AccountDetailsDto;
 import com.smrp.smartmedicinealarm.dto.account.AccountModifyDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
-import com.smrp.smartmedicinealarm.entity.Account;
-import com.smrp.smartmedicinealarm.entity.AccountStatus;
+import com.smrp.smartmedicinealarm.entity.account.Account;
+import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
@@ -15,8 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 import static com.smrp.smartmedicinealarm.error.code.UserErrorCode.ALREADY_DELETED_ACCOUNT;
 import static com.smrp.smartmedicinealarm.error.code.UserErrorCode.CAN_NOT_UPDATE_ACCOUNT_INFO;

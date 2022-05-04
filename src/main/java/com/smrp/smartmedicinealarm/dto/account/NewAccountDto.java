@@ -1,9 +1,9 @@
 package com.smrp.smartmedicinealarm.dto.account;
 
-import com.smrp.smartmedicinealarm.entity.Account;
-import com.smrp.smartmedicinealarm.entity.AccountStatus;
-import com.smrp.smartmedicinealarm.entity.Gender;
-import com.smrp.smartmedicinealarm.entity.Role;
+import com.smrp.smartmedicinealarm.entity.account.Account;
+import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
+import com.smrp.smartmedicinealarm.entity.account.Gender;
+import com.smrp.smartmedicinealarm.entity.account.Role;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
@@ -50,7 +50,7 @@ public class NewAccountDto {
                     .build();
         }
 
-        public  Account toEntity(){
+        public Account toEntity(){
             return Account.builder()
                     .email(email)
                     .name(name)

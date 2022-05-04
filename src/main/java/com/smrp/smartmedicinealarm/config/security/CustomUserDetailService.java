@@ -1,6 +1,6 @@
 package com.smrp.smartmedicinealarm.config.security;
 
-import com.smrp.smartmedicinealarm.entity.Account;
+import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

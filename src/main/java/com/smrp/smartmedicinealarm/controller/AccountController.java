@@ -5,6 +5,7 @@ import com.smrp.smartmedicinealarm.dto.account.AccountModifyDto;
 import com.smrp.smartmedicinealarm.dto.account.NewAccountDto;
 import com.smrp.smartmedicinealarm.dto.account.SimpleAccountDto;
 import com.smrp.smartmedicinealarm.service.account.AccountService;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -24,6 +25,7 @@ import javax.validation.Valid;
 public class AccountController {
     private final AccountService accountService;
 
+    @ApiOperation(value = "사용자 회원가입")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public NewAccountDto.Response accountAdd(
             @Valid @RequestBody NewAccountDto.Request request,
@@ -32,12 +34,18 @@ public class AccountController {
         return accountService.addAccount(request);
     }
 
+    @ApiOperation(value = "사용자 상세 정보")
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("/{accountId}")
-    public AccountDetailsDto accountDetails(@PathVariable Long accountId){
+    public AccountDetailsDto accountDetails(
+            @ApiParam(value = "사용자 PK")
+            @PathVariable Long accountId
+    ){
         return accountService.findAccount(accountId);
     }
 
+    @ApiOperation(value = "사용자 전체 조회")
+    @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("")
     public PagedModel<EntityModel<SimpleAccountDto>> accountList(
             @ApiParam(value = "페이지 번호", defaultValue = "0", example = "0")
@@ -51,6 +59,7 @@ public class AccountController {
         );
     }
 
+    @ApiOperation(value = "사용자 삭제")
     @PreAuthorize("hasRole('NORMAL')")
     @DeleteMapping("/{deletedId}")
     public ResponseEntity<?> accountRemove(
@@ -61,6 +70,7 @@ public class AccountController {
         return ResponseEntity.ok().build();
     }
 
+    @ApiOperation(value = "사용자 정보 수정")
     @PutMapping(value = "/{accountId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> accountModify(
             @ApiParam(value ="사용자 PK")
@@ -71,6 +81,4 @@ public class AccountController {
         accountService.modifyAccount(accountId, accountModifyDto);
         return ResponseEntity.ok().build();
     }
-
-
 }
