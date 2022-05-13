@@ -3,9 +3,11 @@ package com.smrp.smartmedicinealarm.utils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.smrp.smartmedicinealarm.error.code.LoginErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.LoginException;
+import com.smrp.smartmedicinealarm.model.VerifyResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -56,19 +58,23 @@ public class JWTUtils {
                 .sign(key);
     }
 
-    public String verifyToken(String token){
+    public VerifyResult verifyToken(String token){
         return verifyToken(token, key);
     }
 
-    public String verifyToken(String token, String key){
+    public VerifyResult verifyToken(String token, String key){
         Assert.hasText(token, "token 이 올 바르지 않습니다. ");
         DecodedJWT decodedJWT;
         try {
             decodedJWT = JWT.require(Algorithm.HMAC512(key)).build().verify(token);
-        } catch (JWTVerificationException | IllegalArgumentException  e) {
+        }catch(TokenExpiredException e){
+            return VerifyResult.fail(
+                    JWT.decode(token).getSubject()
+            );
+        }catch (JWTVerificationException | IllegalArgumentException  e) {
             throw new LoginException(LoginErrorCode.TOKEN_IS_EXPIRED_OR_WRONG);
         }
-        return decodedJWT.getSubject();
+        return VerifyResult.success(decodedJWT.getSubject());
     }
 
     public Duration getAccessTokenExpiredTime() {

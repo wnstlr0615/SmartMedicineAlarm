@@ -1,8 +1,7 @@
 package com.smrp.smartmedicinealarm.utils;
 
 import com.auth0.jwt.algorithms.Algorithm;
-import com.smrp.smartmedicinealarm.error.code.LoginErrorCode;
-import com.smrp.smartmedicinealarm.error.exception.LoginException;
+import com.smrp.smartmedicinealarm.model.VerifyResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,8 +57,12 @@ class JWTUtilsTest {
         String username = "joon@naver.com";
         String token = jwtUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
 
-        //when //then
-        assertThat(jwtUtils.verifyToken(token, key)).isEqualTo(username);
+        //when
+        VerifyResult verifyResult = jwtUtils.verifyToken(token, key);
+
+        //then
+        assertThat(verifyResult.isResult()).isTrue();
+        assertThat(verifyResult.getUsername()).isEqualTo(username);
 
     }
 
@@ -67,17 +70,17 @@ class JWTUtilsTest {
     @DisplayName("[실패] JWT 토큰 생성 및 검증 - 토큰이 만료한 경우")
     public void failTokenVerification (){
         //given
-        LoginErrorCode errorCode = LoginErrorCode.TOKEN_IS_EXPIRED_OR_WRONG;
         Duration accessExpiredTime = Duration.ofSeconds(-1);
         String username = "joon@naver.com";
         String token = jwtUtils.createToken(username, accessExpiredTime, Algorithm.HMAC512(key));
 
         //when
-        LoginException loginException = assertThrows(LoginException.class,
-                () -> jwtUtils.verifyToken(token, key)
-        );
+        VerifyResult verifyResult = jwtUtils.verifyToken(token, key);
 
         //then
-        assertThat(loginException.getErrorCode()).isEqualTo(errorCode);
+        assertThat(verifyResult.isResult()).isFalse();
+        assertThat(verifyResult.getUsername()).isEqualTo(username);
+
+
     }
 }
