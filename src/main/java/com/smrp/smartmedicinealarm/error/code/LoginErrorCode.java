@@ -11,9 +11,10 @@ public enum LoginErrorCode implements ErrorCode{
 
     //토큰 관련 로그인 에러
     TOKEN_IS_EXPIRED_OR_WRONG("토큰이 만료되었거나 잘못된 토큰을 입력하였습니다.", 400),
-
+    REFRESH_TOKEN_IS_EXPIRED("토큰이 만료되었습니다.", 400),
     //쿠키 관련 로그인 에러
     REFRESH_TOKEN_NOT_FOUND("Refresh token 을 찾을 수 없습니다.", 400)
+
     ;
     private final String description;
     private final int status;

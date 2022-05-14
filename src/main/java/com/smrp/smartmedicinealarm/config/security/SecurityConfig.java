@@ -1,7 +1,11 @@
 package com.smrp.smartmedicinealarm.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smrp.smartmedicinealarm.config.security.filter.JWTCheckFilter;
 import com.smrp.smartmedicinealarm.config.security.filter.JWTLoginFilter;
+import com.smrp.smartmedicinealarm.config.security.handler.CustomAuthenticationEntryPoint;
+import com.smrp.smartmedicinealarm.config.security.handler.JWTLoginAuthenticationFailHandler;
+import com.smrp.smartmedicinealarm.service.refreshtoken.RefreshTokenService;
 import com.smrp.smartmedicinealarm.utils.JWTUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -17,17 +21,19 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final CustomUserDetailService customUserDetailService;
+    private final RefreshTokenService refreshTokenService;
     private final ObjectMapper mapper;
     private final JWTUtils jwtUtils;
-    private final AuthenticationFailureHandler failureHandler;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -56,7 +62,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         ;
-        http.addFilterAt(new JWTLoginFilter(authenticationManagerBean(), mapper, jwtUtils, failureHandler), UsernamePasswordAuthenticationFilter.class)
+        http
+                .addFilterAt(new JWTLoginFilter(authenticationManagerBean(), mapper, jwtUtils, authenticationFailureHandler(), refreshTokenService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(new JWTCheckFilter(customUserDetailService, refreshTokenService, authenticationEntryPoint(), jwtUtils, mapper), BasicAuthenticationFilter.class)
         ;
     }
 
@@ -68,5 +76,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public PasswordEncoder passwordEncoder(){
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+    @Bean
+    public AuthenticationEntryPoint authenticationEntryPoint(){
+        return new CustomAuthenticationEntryPoint(mapper);
+    }
+
+    @Bean
+    AuthenticationFailureHandler authenticationFailureHandler(){
+        return new JWTLoginAuthenticationFailHandler(mapper);
     }
 }

@@ -7,6 +7,7 @@ import com.smrp.smartmedicinealarm.dto.login.LoginFormDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.error.code.LoginErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.LoginException;
+import com.smrp.smartmedicinealarm.service.refreshtoken.RefreshTokenService;
 import com.smrp.smartmedicinealarm.utils.CookieUtils;
 import com.smrp.smartmedicinealarm.utils.JWTUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static com.smrp.smartmedicinealarm.constant.SecurityConstant.ACCESS_TOKEN;
 import static com.smrp.smartmedicinealarm.constant.SecurityConstant.REFRESH_TOKEN;
 import static com.smrp.smartmedicinealarm.error.code.LoginErrorCode.WRONG_LOGIN_FORM;
 
@@ -39,12 +39,14 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     private final ObjectMapper mapper;
     private final JWTUtils jwtUtils;
     private final AuthenticationFailureHandler failureHandler;
+    private final RefreshTokenService refreshTokenService;
 
-    public JWTLoginFilter(AuthenticationManager authenticationManager, ObjectMapper mapper, JWTUtils jwtUtils, AuthenticationFailureHandler failureHandler) {
+    public JWTLoginFilter(AuthenticationManager authenticationManager, ObjectMapper mapper, JWTUtils jwtUtils, AuthenticationFailureHandler failureHandler, RefreshTokenService refreshTokenService) {
         super("/api/v1/login", authenticationManager);
         this.mapper = mapper;
         this.jwtUtils = jwtUtils;
         this.failureHandler = failureHandler;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override
@@ -79,17 +81,21 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
         Account account = ((CustomUserDetail) authResult.getPrincipal()).getAccount();
         String username = account.getEmail();
 
-        // 쿠키 생성 및 설정
-        String accessToken = setAccessTokenCookie(response, username);
-        setRefreshTokenCookie(response, username);
+        // 쿠키 생성
+        String accessToken = jwtUtils.createAccessToken(username);
+        String refreshToken = jwtUtils.createRefreshToken(username);
+
+        refreshTokenService.saveToken(username, refreshToken);
+
+        //쿠키 설정
+        setRefreshTokenCookie(response, refreshToken);
 
         //응답 설정
         setResponseContent(response, accessToken, username);
     }
 
-    private void setRefreshTokenCookie(HttpServletResponse response, String username) {
-        String refreshToken = jwtUtils.createRefreshToken(username);
-        Cookie refreshCookie = CookieUtils.createCookie(REFRESH_TOKEN, refreshToken, (int) jwtUtils.getRefreshTokenExpiredTime().getSeconds());
+    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        Cookie refreshCookie = CookieUtils.createCookie(REFRESH_TOKEN, refreshToken, (int) jwtUtils.getRefreshTokenExpiredTime());
         response.addCookie(refreshCookie);
     }
 
@@ -101,13 +107,6 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
                         JWTLoginResponseDto.createJwtLoginResponseDto(accessToken, username)
                 )
         );
-    }
-
-    private String setAccessTokenCookie(HttpServletResponse response, String username) {
-        String accessToken = jwtUtils.createAccessToken(username);
-        Cookie accessCookie = CookieUtils.createCookie(ACCESS_TOKEN, accessToken, (int) jwtUtils.getAccessTokenExpiredTime().getSeconds());
-        response.addCookie(accessCookie);
-        return accessToken;
     }
 
     @Override

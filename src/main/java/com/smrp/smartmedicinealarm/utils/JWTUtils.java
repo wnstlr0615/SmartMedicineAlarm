@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import javax.annotation.PostConstruct;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -32,12 +31,6 @@ public class JWTUtils {
 
 
 
-    @PostConstruct
-    public void print(){
-        System.out.println("accessTokenExpiredTime = " + accessTokenExpiredTime);
-        System.out.println("refreshTokenExpiredTime = " + refreshTokenExpiredTime);
-        System.out.println("key = " + key);
-    }
 
     public String createAccessToken(String username){
         return createToken(username, accessTokenExpiredTime, Algorithm.HMAC512(key));
@@ -77,11 +70,15 @@ public class JWTUtils {
         return VerifyResult.success(decodedJWT.getSubject());
     }
 
-    public Duration getAccessTokenExpiredTime() {
-        return accessTokenExpiredTime;
+    public long getAccessTokenExpiredTime() {
+        return accessTokenExpiredTime.getSeconds();
     }
 
-    public Duration getRefreshTokenExpiredTime() {
-        return refreshTokenExpiredTime;
+    public long getRefreshTokenExpiredTime() {
+        return refreshTokenExpiredTime.getSeconds();
+    }
+
+    public String getKey() {
+        return key;
     }
 }
