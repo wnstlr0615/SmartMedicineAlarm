@@ -22,4 +22,14 @@ public class MarkCode {
     private String markCodeFrontImg; //마크이미지(앞)
     @Column(length = 500)
     private String markCodeBackImg;//마크이미지(뒤)
+
+    //== 생성 메서드 ==//
+    public static MarkCode createMarkCode(String markCodeFrontAnal, String markCodeBackAnal, String markCodeFrontImg  ,String markCodeBackImg){
+        return MarkCode.builder()
+                .markCodeFrontAnal(markCodeFrontAnal)
+                .markCodeBackAnal(markCodeBackAnal)
+                .markCodeFrontImg(markCodeFrontImg)
+                .markCodeBackImg(markCodeBackImg)
+                .build();
+    }
 }

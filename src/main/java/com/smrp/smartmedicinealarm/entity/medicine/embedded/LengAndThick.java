@@ -18,4 +18,13 @@ public class LengAndThick {
     private String lengShort; //크기(단축)
     @Column(length = 50)
     private String thick;   //크기(두께)
+
+    //== 생성 메서드 ==//
+    public static LengAndThick createLengAndThick(String lengShort, String lengLong, String thick) {
+        return  LengAndThick.builder()
+                .lengLong(lengLong)
+                .lengShort(lengShort)
+                .thick(thick)
+                .build();
+    }
 }

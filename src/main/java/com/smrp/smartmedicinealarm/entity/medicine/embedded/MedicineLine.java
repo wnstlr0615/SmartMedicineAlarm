@@ -13,7 +13,15 @@ import javax.persistence.Embeddable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MedicineLine {
     @Column(length = 3000)
-    private String lineBack;  //분할선(뒤)
-    @Column(length = 3000)
     private String lineFront;  //분할선(앞)
+    @Column(length = 3000)
+    private String lineBack;  //분할선(뒤)
+
+    //== 생성 메서드 ==//
+    public static MedicineLine crateMedicineLine(String lineFront, String lineBack){
+        return MedicineLine.builder()
+                .lineFront(lineFront)
+                .lineBack(lineBack)
+                .build();
+    }
 }
