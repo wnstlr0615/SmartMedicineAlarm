@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.entity.medicine;
 
+import com.smrp.smartmedicinealarm.entity.BaseTimeEntity;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import lombok.*;
 
@@ -11,7 +12,7 @@ import java.time.LocalDate;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Medicine {
+public class Medicine extends BaseTimeEntity {
     @Id
     @GeneratedValue
     private Long medicineId; // PK
