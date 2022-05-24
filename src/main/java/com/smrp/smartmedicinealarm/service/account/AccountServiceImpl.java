@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.smrp.smartmedicinealarm.error.code.UserErrorCode.ALREADY_DELETED_ACCOUNT;
@@ -29,7 +30,7 @@ public class AccountServiceImpl implements AccountService {
 
     /** 계정 생성 */
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.DEFAULT)
     public NewAccountDto.Response addAccount(NewAccountDto.Request request) {
         //계정 생성
         Account account = createAccount(request);
