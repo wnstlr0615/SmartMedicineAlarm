@@ -8,11 +8,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
 
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SimpleMedicineDto {
+@Relation(collectionRelation = "items")
+public class SimpleMedicineDto extends RepresentationModel<SimpleMedicineDto> {
 
     @ApiModelProperty(value = "medicine_id", example = "1L")
     private Long medicineId;

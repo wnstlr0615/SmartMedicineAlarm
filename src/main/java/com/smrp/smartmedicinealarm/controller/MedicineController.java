@@ -7,9 +7,14 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @Slf4j
 @RestController
@@ -28,12 +33,24 @@ public class MedicineController {
             @RequestBody MedicineSearchCondition MedicineSearchCondition,
             PagedResourcesAssembler<SimpleMedicineDto> assembler
     ){
+        Page<SimpleMedicineDto> simpleMedicineDtoPage = medicineService.findAllMedicine(page, size, MedicineSearchCondition);
+        PagedModel<EntityModel<SimpleMedicineDto>> pageModel = assembler.toModel(simpleMedicineDtoPage);
 
-        return ResponseEntity.ok(
-                assembler.toModel(
-                        medicineService.findAllMedicine(page, size, MedicineSearchCondition)
-                )
+        //링크 추가
+        addSelfLink(pageModel);
+
+        return ResponseEntity.ok(pageModel);
+    }
+
+    private void addSelfLink(PagedModel<EntityModel<SimpleMedicineDto>> pageModel) {
+        pageModel.add(
+                linkTo(MedicineController.class).withRel("profile")
         );
+        //상세 바로가기 링크 추가
+//        pageModel.getContent().forEach(medicineDto ->
+//                medicineDto.add(
+//                        linkTo(methodOn(MedicineController.class)).withSelfRel()
+//                ));
     }
 
 }
