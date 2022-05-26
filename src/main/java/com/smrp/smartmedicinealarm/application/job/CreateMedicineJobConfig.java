@@ -2,7 +2,7 @@ package com.smrp.smartmedicinealarm.application.job;
 
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
-import com.smrp.smartmedicinealarm.repository.MedicineRepository;
+import com.smrp.smartmedicinealarm.repository.medicine.MedicineRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileUrlResource;
 
-import javax.persistence.EntityManager;
 import java.time.LocalDate;
 
 import static com.smrp.smartmedicinealarm.utils.DateTimeUtils.dateToLocalDateNullAble;
@@ -36,7 +35,6 @@ public class CreateMedicineJobConfig {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final MedicineRepository medicineRepository;
-    private final EntityManager entityManager;
 
     @Bean
     public Job csvFileLoadJob() throws Exception {
@@ -105,10 +103,7 @@ public class CreateMedicineJobConfig {
         };
     }
     private ItemWriter<? super Medicine> jpaWriter() {
-        return (medicines) -> medicines.stream().forEach((medicine) ->{
-            log.info("id : {}, itemName : {} save",medicine.getMedicineId(), medicine.getItemName());
-            medicineRepository.save(medicine);
-            }
+        return (medicines) -> medicines.forEach(medicineRepository::save
         );
     }
 
