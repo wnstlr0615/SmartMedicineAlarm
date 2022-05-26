@@ -2,6 +2,8 @@ package com.smrp.smartmedicinealarm.error.handler;
 
 import com.smrp.smartmedicinealarm.error.code.ErrorCode;
 import com.smrp.smartmedicinealarm.error.code.GlobalErrorCode;
+import com.smrp.smartmedicinealarm.error.exception.CustomRuntimeException;
+import com.smrp.smartmedicinealarm.error.exception.MedicineException;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.error.response.ErrorResponse;
 import com.smrp.smartmedicinealarm.error.response.FieldErrorDto;
@@ -24,8 +26,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(UserException.class)
-    private ResponseEntity<?> userExceptionHandler(UserException e, HttpServletRequest request){
+    @ExceptionHandler({
+            UserException.class,
+            MedicineException.class
+    })
+    private ResponseEntity<?> customRuntimeExceptionHandler(CustomRuntimeException e, HttpServletRequest request){
         printLog(e, request);
         return createErrorResponse(e);
     }
@@ -76,7 +81,7 @@ public class GlobalExceptionHandler {
                 .map(objectError -> (FieldError) objectError).map(FieldErrorDto::fromFieldError).collect(Collectors.toList());
     }
 
-    private ResponseEntity<ErrorResponse> createErrorResponse(UserException e) {
+    private ResponseEntity<ErrorResponse> createErrorResponse(CustomRuntimeException e) {
         return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ErrorResponse.CreateErrorResponse(e.getErrorCode())
         );
