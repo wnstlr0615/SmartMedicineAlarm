@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.controller;
 
+import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition;
 import com.smrp.smartmedicinealarm.service.medicine.MedicineService;
@@ -10,11 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
@@ -24,11 +28,11 @@ public class MedicineController {
     private final MedicineService medicineService;
 
     @GetMapping("")
-    @ApiOperation("약 동적(모양, 색상, 구분선, 등) 조회 하기")
+    @ApiOperation("약 동적(모양, 색상, 구분선, 등) 조회 API")
     public ResponseEntity<?> findAllMedicine(
-            @ApiParam(value = "페이지 번호", defaultValue = "0")
+            @ApiParam(value = "페이지 번호", defaultValue = "0", required = true)
             @RequestParam(defaultValue = "0")int page,
-            @ApiParam(value = "페이지 사이즈", defaultValue = "10")
+            @ApiParam(value = "페이지 사이즈", defaultValue = "10", required = true)
             @RequestParam(defaultValue = "10")int size,
             @RequestBody MedicineSearchCondition MedicineSearchCondition,
             PagedResourcesAssembler<SimpleMedicineDto> assembler
@@ -44,13 +48,31 @@ public class MedicineController {
 
     private void addSelfLink(PagedModel<EntityModel<SimpleMedicineDto>> pageModel) {
         pageModel.add(
-                linkTo(MedicineController.class).withRel("profile")
+                Link.of(linkTo(SwaggerController.class) + "#/medicine-controller/findAllMedicineGET").withRel("profile")
         );
-        //상세 바로가기 링크 추가
-//        pageModel.getContent().forEach(medicineDto ->
-//                medicineDto.add(
-//                        linkTo(methodOn(MedicineController.class)).withSelfRel()
-//                ));
+        pageModel.getContent().forEach(medicineDto -> {
+            Assert.notNull(medicineDto.getContent(), "content of medicineDto  must not null");
+                medicineDto.add(
+                        linkTo(methodOn(MedicineController.class).medicineDetails(medicineDto.getContent().getMedicineId())).withSelfRel()
+                );
+        });
     }
+    @GetMapping("/{medicineId}")
+    @ApiOperation("약 상세정보 조회 API")
+    public ResponseEntity<?> medicineDetails(
+            @ApiParam(value = "약 PK", defaultValue = "1L")
+            @PathVariable Long medicineId
+    ){
+        MedicineDetailsDto medicineDetailsDto = medicineService.findMedicineDetails(medicineId);
+
+        //링크 추가
+        medicineDetailsDto.add(
+                linkTo(methodOn(MedicineController.class).medicineDetails(medicineId)).withSelfRel(),
+                Link.of(linkTo(SwaggerController.class) + "#/medicine-controller/medicineDetailsGET").withRel("profile")
+        );
+        return ResponseEntity.ok(medicineDetailsDto);
+    }
+
+
 
 }

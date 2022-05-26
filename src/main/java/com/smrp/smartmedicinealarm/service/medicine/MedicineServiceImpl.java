@@ -1,6 +1,10 @@
 package com.smrp.smartmedicinealarm.service.medicine;
 
+import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
+import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
+import com.smrp.smartmedicinealarm.error.code.MedicineErrorCode;
+import com.smrp.smartmedicinealarm.error.exception.MedicineException;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition;
 import com.smrp.smartmedicinealarm.repository.medicine.MedicineRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +25,16 @@ public class MedicineServiceImpl implements MedicineService{
     public Page<SimpleMedicineDto> findAllMedicine(int page, int size, MedicineSearchCondition condition) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return medicineRepository.findSimpleMedicineAllBySearchCond(pageRequest, condition);
+    }
+
+    @Override
+    public MedicineDetailsDto findMedicineDetails(Long medicineId) {
+        Medicine medicine = getMedicine(medicineId);
+        return MedicineDetailsDto.fromEntity(medicine);
+    }
+
+    private Medicine getMedicine(Long medicineId) {
+        return medicineRepository.findById(medicineId)
+                .orElseThrow(() -> new MedicineException(MedicineErrorCode.NOT_FOUND_MEDICINE));
     }
 }

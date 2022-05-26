@@ -1,15 +1,20 @@
 package com.smrp.smartmedicinealarm.service.medicine;
 
+import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
+import com.smrp.smartmedicinealarm.error.code.MedicineErrorCode;
+import com.smrp.smartmedicinealarm.error.exception.MedicineException;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineCndColor;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineCndLine;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineCndShape;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
@@ -25,6 +30,7 @@ import static com.smrp.smartmedicinealarm.model.medicine.MedicineCndShape.CIRCLE
 import static com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition.createMedicineSearchCondition;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @SpringBootTest
@@ -76,4 +82,55 @@ class MedicineServiceImplTest {
             );
         }
     }
+    @Nested
+    @DisplayName("약 상세 정보 조회 테스트")
+    class WhenMedicineDetails{
+        @ParameterizedTest
+        @ValueSource(longs = {1,2,3,4,5})
+        public void givenMedicineId_whenMedicineDetails_thenReturnMedicineDetailDto(Long medicineId){
+            //given
+            //when
+            MedicineDetailsDto medicineDetailsDto = medicineService.findMedicineDetails(medicineId);
+            //then
+            assertThat(medicineDetailsDto)
+                    .hasFieldOrProperty("medicineId").isNotNull()
+                    .hasFieldOrProperty("itemSeq").isNotNull()
+                    .hasFieldOrProperty("itemName").isNotNull()
+                    .hasFieldOrProperty("itemImage").isNotNull()
+                    .hasFieldOrProperty("etcOtcName").isNotNull()
+                    .hasFieldOrProperty("className").isNotNull()
+                    .hasFieldOrProperty("lengLong").isNotNull()
+                    .hasFieldOrProperty("lengShort").isNotNull()
+                    .hasFieldOrProperty("thick").isNotNull()
+                    .hasFieldOrProperty("entpName").isNotNull()
+                    .hasFieldOrProperty("printFront").isNotNull()
+                    .hasFieldOrProperty("printBack").isNotNull()
+                    .hasFieldOrProperty("drugShape").isNotNull()
+                    .hasFieldOrProperty("chart").isNotNull()
+                    .hasFieldOrProperty("formCodeName").isNotNull()
+                    .hasFieldOrProperty("lineFront").isNotNull()
+                    .hasFieldOrProperty("lineBack").isNotNull()
+                    .hasFieldOrProperty("colorFront").isNotNull()
+                    .hasFieldOrProperty("colorBack").isNotNull()
+                    ;
+        }
+    }
+    @Test
+    @DisplayName("[실패] 존재하지 않는 약품 조회 - NOT_FOUND_MEDICINE")
+    public void givenNotFoundMedicineId_whenMedicineDetails_thenMedicineException(){
+        //given
+        long NotFoundMedicineId = 99999999999L;
+        final MedicineErrorCode errorCode = MedicineErrorCode.NOT_FOUND_MEDICINE;
+        //when
+        final MedicineException exception = assertThrows(MedicineException.class,
+            () ->  medicineService.findMedicineDetails(NotFoundMedicineId)
+        )
+        ;
+        //then
+        assertAll(
+            () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+            () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+        );
+    }
+    
 }

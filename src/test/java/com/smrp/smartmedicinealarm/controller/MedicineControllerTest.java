@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smrp.smartmedicinealarm.error.code.MedicineErrorCode;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineCndColor;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineCndLine;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineCndShape;
@@ -8,6 +9,7 @@ import com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition;
 import com.smrp.smartmedicinealarm.service.medicine.MedicineService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -72,7 +74,7 @@ class MedicineControllerTest {
                     .andExpect(handler().handlerType(MedicineController.class))
                     .andExpect(handler().methodName("findAllMedicine"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$._embedded.items").hasJsonPath())
+                    .andExpect(jsonPath("$._embedded.items").isNotEmpty())
                     .andExpect(jsonPath("$._links.self").isNotEmpty())
                     .andExpect(jsonPath("$._links.profile").isNotEmpty())
                     .andExpect(jsonPath("_embedded.items[0].medicineId").exists())
@@ -98,6 +100,67 @@ class MedicineControllerTest {
             );
         }
     }
+    @Nested
+    @DisplayName("약 상세 조회 테스트")
+    class MedicineDetails{
+        @Test
+        @DisplayName("[GET} 약 상세 정보 조회")
+        public void givenMedicineId_whenMedicineDetails_thenMedicineDetailDto() throws Exception{
+            //given
+            long medicineId = 1L;
+
+            //when //then
+            mvc.perform(get("/api/v1/medicines/{medicineId}", medicineId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                    )
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(handler().handlerType(MedicineController.class))
+                    .andExpect(handler().methodName("medicineDetails"))
+                    .andExpect(jsonPath("$.medicineId").exists())
+                    .andExpect(jsonPath("$.itemSeq").exists())
+                    .andExpect(jsonPath("$.itemName").exists())
+                    .andExpect(jsonPath("$.itemImage").exists())
+                    .andExpect(jsonPath("$.etcOtcName").exists())
+                    .andExpect(jsonPath("$.className").exists())
+                    .andExpect(jsonPath("$.lengLong").exists())
+                    .andExpect(jsonPath("$.lengShort").exists())
+                    .andExpect(jsonPath("$.thick").exists())
+                    .andExpect(jsonPath("$.entpName").exists())
+                    .andExpect(jsonPath("$.printFront").exists())
+                    .andExpect(jsonPath("$.printBack").exists())
+                    .andExpect(jsonPath("$.drugShape").exists())
+                    .andExpect(jsonPath("$.chart").exists())
+                    .andExpect(jsonPath("$.formCodeName").exists())
+                    .andExpect(jsonPath("$.lineFront").exists())
+                    .andExpect(jsonPath("$.lineBack").exists())
+                    .andExpect(jsonPath("$.colorFront").exists())
+                    .andExpect(jsonPath("$.colorBack").exists())
+                    .andExpect(jsonPath("$.colorBack").exists())
+                    .andExpect(jsonPath("$.colorBack").exists())
+                    .andExpect(jsonPath("$._links.self.href").exists())
+                    .andExpect(jsonPath("$._links.profile.href").exists())
+            ;
+        }
+        @Test
+        @DisplayName("[실패][GET] 약 PK가 없는 경우 - MEDICINE_NOT_FOUND")
+        public void givenDeleteId_whenModifyAccount_thenUserException() throws Exception{
+            //given
+            long notFoundMedicineId = 9999999L;
+            MedicineErrorCode errorCode = MedicineErrorCode.NOT_FOUND_MEDICINE  ;
+
+            //when //then
+            mvc.perform(get("/api/v1/medicines/{id}", notFoundMedicineId)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value(errorCode.toString()))
+                .andExpect(jsonPath("$.errorMessage").value(errorCode.getDescription()))
+            ;
+        }
+    }
+
 
 
 
