@@ -28,8 +28,6 @@ public class Medicine extends BaseTimeEntity {
     @Column(length = 100)
     private String etcOtcName; //전문/일반
 
-
-
     /* 분류 */
     @Embedded
     private ClassNoAndName classNoAndName;
@@ -84,7 +82,8 @@ public class Medicine extends BaseTimeEntity {
     public static Medicine createMedicine(Long itemSeq, String  itemName, String itemImage, String etcOtcName,
                                           ClassNoAndName classNoAndName, LengAndThick lengAndThick, MedicineCompany medicineCompany,
                                           MedicineIdentification medicineIdentification, MedicineLine medicineLine, MedicineColor medicineColor,
-                                          MarkCode markCode, MedicineDate medicineDate) {
+                                          MarkCode markCode, MedicineDate medicineDate
+    ) {
         return Medicine.builder()
                 .itemSeq(itemSeq)
                 .etcOtcName(etcOtcName)
