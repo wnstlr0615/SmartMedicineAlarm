@@ -113,4 +113,14 @@ public class MedicineController {
         );
         return ResponseEntity.ok(medicineDetailsDto);
     }
+
+    @DeleteMapping("/{medicineId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation("약품 제거하기")
+    public void medicineRemove(
+            @ApiParam(value = "약 PK", defaultValue = "1L")
+            @PathVariable Long medicineId
+    ) {
+        medicineService.removeMedicine(medicineId);
+    }
 }

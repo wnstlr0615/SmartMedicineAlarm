@@ -380,5 +380,27 @@ class MedicineControllerTest {
             ;
         }
     }
+    @Nested
+    @DisplayName("약품 제거 하기")
+    class WhenMedicineRemove{
+
+        @Test
+        @MockAdminUser
+        @DisplayName("[성공][DELETED] 약품 제거 하기")
+        public void givenMedicineId_whenMedicineRemove_thenSuccess() throws Exception {
+            //given
+            long deleteMedicineId = 1L;
+
+            //when //then
+            mvc.perform(delete("/api/v1/medicines/{deleteMedicineId}", deleteMedicineId)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(handler().handlerType(MedicineController.class))
+                .andExpect(handler().methodName("medicineRemove"))
+            ;
+        }
+    }
 
 }

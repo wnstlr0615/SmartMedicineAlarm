@@ -53,6 +53,13 @@ public class MedicineServiceImpl implements MedicineService{
         return MedicineDetailsDto.fromEntity(medicine);
     }
 
+    @Override
+    @Transactional
+    public void removeMedicine(Long medicineId) {
+        Medicine medicine = getMedicine(medicineId);
+        medicineRepository.delete(medicine);
+    }
+
     private void validDuplicatedItemSeq(Long itemSeq) {
         if(medicineRepository.countByItemSeq(itemSeq) > 0){
             throw new MedicineException(MedicineErrorCode.DUPLICATED_MEDICINE_ITEMSEQ);

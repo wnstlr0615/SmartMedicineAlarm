@@ -307,6 +307,28 @@ class MedicineServiceImplTest {
                 () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
         );
     }
+    @Nested
+    @DisplayName("약품 제거 하기")
+    class WhenMedicineRemove{
+        @Test
+        @DisplayName("[성공]약품 제거하기 - 제거 후 재요청시 NOF_FOUND_MEDICINE 에러 발생")
+        public void givenMedicineId_whenMedicineRemove_thenSuccess(){
+            //given
+            long medicineId = 1L;
+            MedicineErrorCode errorCode = MedicineErrorCode.NOT_FOUND_MEDICINE;
 
+            //when
+            medicineService.removeMedicine(medicineId);
+            MedicineException exception = assertThrows(MedicineException.class,
+                    () -> medicineService.removeMedicine(1L));
+
+            //then
+            assertAll(
+                    () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+                    () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+            );
+
+        }
+    }
     
 }

@@ -14,10 +14,11 @@ public interface MedicineService {
     /** 약품 상세 조회 */
     MedicineDetailsDto findMedicineDetails(Long medicineId);
 
-    /**
-     * 약품 추가
-     */
+    /** 약품 추가*/
     MedicineDetailsDto addMedicine(CreateMedicineDto medicineDto);
 
+    /** 약품 정보 수정*/
     MedicineDetailsDto modifyMedicine(Long medicineId, UpdateMedicineDto medicineDto);
+    /** 약품 제거 하기 */
+    void removeMedicine(Long medicineId);
 }
