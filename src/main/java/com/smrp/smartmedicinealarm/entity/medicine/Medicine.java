@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.entity.medicine;
 
+import com.smrp.smartmedicinealarm.dto.medicine.UpdateMedicineDto;
 import com.smrp.smartmedicinealarm.entity.BaseTimeEntity;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import lombok.*;
@@ -59,27 +60,28 @@ public class Medicine extends BaseTimeEntity {
     private MedicineDate medicineDate;
 
     //== 생성 메서드 ==//
-    public static Medicine createMedicine(Long medicineId, Long itemSeq, String  itemName, String itemImage, String etcOtcName,
-                    ClassNoAndName classNoAndName, LengAndThick lengAndThick, MedicineCompany medicineCompany,
-                    MedicineIdentification medicineIdentification, MedicineLine medicineLine, MedicineColor medicineColor,
-                    MarkCode markCode, MedicineDate medicineDate) {
+    public static Medicine createMedicine(Long medicineId, Long itemSeq, String itemName, String itemImage, String etcOtcName,
+                                          ClassNoAndName classNoAndName, LengAndThick lengAndThick, MedicineCompany medicineCompany,
+                                          MedicineIdentification medicineIdentification, MedicineLine medicineLine, MedicineColor medicineColor,
+                                          MarkCode markCode, MedicineDate medicineDate) {
         return Medicine.builder()
-                    .medicineId(medicineId)
-                    .itemSeq(itemSeq)
-                    .etcOtcName(etcOtcName)
-                    .itemImage(itemImage)
-                    .itemName(itemName)
-                    .classNoAndName(classNoAndName)
-                    .lengAndThick(lengAndThick)
-                    .medicineCompany(medicineCompany)
-                    .medicineIdentification(medicineIdentification)
-                    .medicineLine(medicineLine)
-                    .medicineColor(medicineColor)
-                    .markCode(markCode)
-                    .medicineDate(medicineDate)
-                  . build();
+                .medicineId(medicineId)
+                .itemSeq(itemSeq)
+                .etcOtcName(etcOtcName)
+                .itemImage(itemImage)
+                .itemName(itemName)
+                .classNoAndName(classNoAndName)
+                .lengAndThick(lengAndThick)
+                .medicineCompany(medicineCompany)
+                .medicineIdentification(medicineIdentification)
+                .medicineLine(medicineLine)
+                .medicineColor(medicineColor)
+                .markCode(markCode)
+                .medicineDate(medicineDate)
+                .build();
     }
-    public static Medicine createMedicine(Long itemSeq, String  itemName, String itemImage, String etcOtcName,
+
+    public static Medicine createMedicine(Long itemSeq, String itemName, String itemImage, String etcOtcName,
                                           ClassNoAndName classNoAndName, LengAndThick lengAndThick, MedicineCompany medicineCompany,
                                           MedicineIdentification medicineIdentification, MedicineLine medicineLine, MedicineColor medicineColor,
                                           MarkCode markCode, MedicineDate medicineDate
@@ -97,7 +99,22 @@ public class Medicine extends BaseTimeEntity {
                 .medicineColor(medicineColor)
                 .markCode(markCode)
                 .medicineDate(medicineDate)
-                . build();
+                .build();
     }
 
+    //== 비즈니스 메서드 ==//
+    public void updateByDto(UpdateMedicineDto dto) {
+        this.itemSeq = dto.getItemSeq() != null ? dto.getItemSeq() : this.itemSeq;
+        this.etcOtcName = dto.getEtcOtcName() != null ? dto.getEtcOtcName() : this.etcOtcName;
+        this.itemImage = dto.getItemImage() != null ? dto.getItemImage() : this.itemImage;
+        this.itemName = dto.getItemName() != null ? dto.getItemName() : this.itemName;
+        classNoAndName.update(dto.getClassNo(), dto.getClassName());
+        lengAndThick.update(dto.getLengLong(), dto.getLengShort(), dto.getThick());
+        medicineCompany.update(dto.getEntpSeq(), dto.getEntpName());
+        medicineIdentification.update(dto.getPrintFront(), dto.getPrintBack(), dto.getDrugShape(), dto.getChart(), dto.getFormCodeName());
+        medicineLine.update(dto.getLineFront(), dto.getLineBack());
+        medicineColor.update(dto.getColorFront(), dto.getColorBack());
+        markCode.update(dto.getMarkCodeBackAnal(), dto.getMarkCodeFrontAnal(), dto.getMarkCodeFrontImg(), dto.getMarkCodeBackImg());
+        medicineDate.update(dto.getItemPermitDate(), dto.getImgRegistTs(), dto.getChangeDate());
+    }
 }

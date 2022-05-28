@@ -32,4 +32,12 @@ public class MarkCode {
                 .markCodeBackImg(markCodeBackImg)
                 .build();
     }
+
+    //== 비즈니스 메서드 ==//
+    public void update(String markCodeBackAnal, String markCodeFrontAnal, String markCodeFrontImg, String markCodeBackImg) {
+        this.markCodeBackAnal = markCodeBackAnal != null ? markCodeBackAnal : this.markCodeBackAnal;
+        this.markCodeFrontAnal = markCodeFrontAnal != null ? markCodeFrontAnal : this.markCodeFrontAnal;
+        this.markCodeFrontImg = markCodeFrontImg != null ? markCodeFrontImg : this.markCodeFrontImg;
+        this.markCodeBackImg = markCodeBackImg != null ? markCodeBackImg : this.markCodeBackImg;
+    }
 }

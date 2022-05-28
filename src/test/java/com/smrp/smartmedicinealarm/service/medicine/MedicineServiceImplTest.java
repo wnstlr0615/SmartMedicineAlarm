@@ -3,6 +3,7 @@ package com.smrp.smartmedicinealarm.service.medicine;
 import com.smrp.smartmedicinealarm.dto.medicine.CreateMedicineDto;
 import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
+import com.smrp.smartmedicinealarm.dto.medicine.UpdateMedicineDto;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import com.smrp.smartmedicinealarm.error.code.MedicineErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.MedicineException;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -46,6 +48,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Transactional
 class MedicineServiceImplTest {
     @Autowired
     MedicineService medicineService;
@@ -216,7 +219,94 @@ class MedicineServiceImplTest {
 
         }
     }
+    @Nested
+    @DisplayName("약품 업데이트 테스트")
+    class WhenMedicineModify{
+        @Test
+        @DisplayName("[성공] 약품 업데이트 ")
+        public void givenUpdateMedicineDto_whenModifyMedicineDto_thenSuccess(){
+            //given
+            long medicineId = 1L;
+            UpdateMedicineDto updateMedicineDto = createUpdateMedicineDto(200611525, "타이레놀", "일반의약품");
+            //when
 
+            MedicineDetailsDto medicineDetailsDto = medicineService.modifyMedicine(medicineId, updateMedicineDto);
+            //then
+
+            assertThat(medicineDetailsDto)
+                    .hasFieldOrPropertyWithValue("medicineId", medicineId)
+                    .hasFieldOrPropertyWithValue("itemSeq", medicineDetailsDto.getItemSeq())
+                    .hasFieldOrPropertyWithValue("itemName", medicineDetailsDto.getItemName())
+                    .hasFieldOrPropertyWithValue("itemImage", medicineDetailsDto.getItemImage())
+                    .hasFieldOrPropertyWithValue("etcOtcName", medicineDetailsDto.getEtcOtcName())
+                    .hasFieldOrPropertyWithValue("className", medicineDetailsDto.getClassName())
+                    .hasFieldOrPropertyWithValue("lengLong", medicineDetailsDto.getLengLong())
+                    .hasFieldOrPropertyWithValue("lengShort", medicineDetailsDto.getLengShort())
+                    .hasFieldOrPropertyWithValue("thick", medicineDetailsDto.getThick())
+                    .hasFieldOrPropertyWithValue("entpName", medicineDetailsDto.getEntpName())
+                    .hasFieldOrPropertyWithValue("printFront", medicineDetailsDto.getPrintFront())
+                    .hasFieldOrPropertyWithValue("printBack", medicineDetailsDto.getPrintBack())
+                    .hasFieldOrPropertyWithValue("drugShape", medicineDetailsDto.getDrugShape())
+                    .hasFieldOrPropertyWithValue("chart", medicineDetailsDto.getChart())
+                    .hasFieldOrPropertyWithValue("formCodeName", medicineDetailsDto.getFormCodeName())
+                    .hasFieldOrPropertyWithValue("lineFront", medicineDetailsDto.getLineFront())
+                    .hasFieldOrPropertyWithValue("lineBack", medicineDetailsDto.getLineBack())
+                    .hasFieldOrPropertyWithValue("colorFront", medicineDetailsDto.getColorFront())
+                    .hasFieldOrPropertyWithValue("colorBack", medicineDetailsDto.getColorBack())
+                    ;
+        }
+    }
+    private UpdateMedicineDto createUpdateMedicineDto(long seq, String itemName, String etcOtcName) {
+        Long itemSeq = seq;
+        String itemImage =  "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/148609543321800149";
+        ClassNoAndName classNoAndName = createClassNoAndName("01190", "기타의 중추신경용약");
+        LengAndThick lengAndThick = createLengAndThick("13.0", "13.0", "3.5");
+        MedicineCompany medicineCompany = createMedicineCompany(20161439L, "(주)한국로슈");
+        MedicineIdentification medicineIdentification
+                = createMedicineIdentification("RO분할선C분할선HE분할선마크분할선", "십자분할선", "원형", "십자눈금이 새겨져 있는 분홍색의 원형정제이다", "나정");
+        MedicineLine medicineLine = crateMedicineLine("+", "+");
+        MedicineColor medicineColor = createMedicineColor("분홍", "");
+        MarkCode markCode = createMarkCode("육각형", "", "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147938640332900169", "");
+        MedicineDate medicineDate = createMedicineDate(null, LocalDate.parse("2004-12-22"), LocalDate.parse("2020-02-27"));
+        return UpdateMedicineDto.createUpdateMedicineDto(itemSeq, itemName, itemImage, etcOtcName, classNoAndName, lengAndThick,
+                medicineCompany, medicineIdentification, medicineLine, medicineColor, markCode, medicineDate);
+    }
+    @Test
+    @DisplayName("[실패] 등록되지않는 medicineId 로 요청한 경우 - NOT_FOUND_MEDICINE")
+    public void givenNotFoundMedicineId_whenMedicineModify_thenMedicineException(){
+        //given
+        Long noFoundMedicineId = 99999999L;
+        final MedicineErrorCode errorCode = MedicineErrorCode.NOT_FOUND_MEDICINE;
+
+        //when
+        final MedicineException exception = assertThrows(MedicineException.class,
+            () -> medicineService.modifyMedicine(noFoundMedicineId, createUpdateMedicineDto(200611525, "타이레놀", "일반의약품"))
+        )
+        ;
+        //then
+        assertAll(
+            () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+            () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+        );
+    }
+    @Test
+    @DisplayName("[실패]  업데이트 한 약의 itemSeq가 이미 있는 경우 - DUPLICATED_MEDICINE_ITEMSEQ")
+    public void givenDuplicateItemSeq_whenMedicineModify_thenMedicineException(){
+        //given
+        Long medicineId = 1L;
+        final MedicineErrorCode errorCode = MedicineErrorCode.DUPLICATED_MEDICINE_ITEMSEQ;
+
+        //when
+        final MedicineException exception = assertThrows(MedicineException.class,
+                () -> medicineService.modifyMedicine(medicineId, createUpdateMedicineDto(200611524L, "타이레놀", "일반의약품"))
+        )
+                ;
+        //then
+        assertAll(
+                () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+                () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+        );
+    }
 
     
 }

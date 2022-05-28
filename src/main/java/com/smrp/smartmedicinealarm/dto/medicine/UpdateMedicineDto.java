@@ -1,6 +1,5 @@
 package com.smrp.smartmedicinealarm.dto.medicine;
 
-import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
@@ -10,22 +9,13 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.ClassNoAndName.createClassNoAndName;
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.LengAndThick.createLengAndThick;
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MarkCode.createMarkCode;
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineColor.createMedicineColor;
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineCompany.createMedicineCompany;
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineDate.createMedicineDate;
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineIdentification.createMedicineIdentification;
-import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineLine.crateMedicineLine;
-
 @Getter
 @Setter
 @Builder
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CreateMedicineDto {
+public class UpdateMedicineDto {
     @NotNull(message = "약품 일련번호는 필수입니다.")
     @ApiModelProperty(value = "품목 일련 번호", example = "200611524")
     private Long itemSeq;
@@ -128,12 +118,10 @@ public class CreateMedicineDto {
     @ApiModelProperty(value = "변경일자", example = "20200227")
     private LocalDate changeDate;
 
-
-    //== 생성 메서드 ==//
-    public static CreateMedicineDto createMedicineDto(Long itemSeq, String  itemName, String itemImage, String etcOtcName,
-                                          ClassNoAndName classNoAndName, LengAndThick lengAndThick, MedicineCompany medicineCompany,
-                                          MedicineIdentification medicineIdentification, MedicineLine medicineLine, MedicineColor medicineColor,
-                                          MarkCode markCode, MedicineDate medicineDate
+    public static UpdateMedicineDto createUpdateMedicineDto(Long itemSeq, String  itemName, String itemImage, String etcOtcName,
+                                                      ClassNoAndName classNoAndName, LengAndThick lengAndThick, MedicineCompany medicineCompany,
+                                                      MedicineIdentification medicineIdentification, MedicineLine medicineLine, MedicineColor medicineColor,
+                                                      MarkCode markCode, MedicineDate medicineDate
     ){
         Assert.notNull(itemSeq, "itemSeq must not null");
         Assert.hasText(itemName, "itemName must not blank");
@@ -151,7 +139,7 @@ public class CreateMedicineDto {
         Assert.hasText(medicineIdentification.getFormCodeName(), "formCodeName must not blank");
         Assert.notNull(medicineDate.getImgRegistTs(), "imgRegisTs must not null");
         Assert.hasText(itemName, "itemName must not null");
-        return CreateMedicineDto.builder()
+        return UpdateMedicineDto.builder()
                 .itemSeq(itemSeq)
                 .itemName(itemName)
                 .itemImage(itemImage)
@@ -180,31 +168,5 @@ public class CreateMedicineDto {
                 .imgRegistTs(medicineDate.getImgRegistTs())
                 .changeDate(medicineDate.getChangeDate())
                 .build();
-    }
-
-    public Medicine toEntity() {
-        ClassNoAndName classNoAndName = createClassNoAndName(classNo, className);
-        LengAndThick lengAndThick = createLengAndThick(lengShort, lengLong, thick);
-        MedicineCompany medicineCompany = createMedicineCompany(20161439L, entpName);
-        MedicineIdentification medicineIdentification
-                = createMedicineIdentification(printFront, printBack, drugShape, chart, formCodeName);
-        MedicineLine medicineLine = crateMedicineLine(lineFront, lineBack);
-        MedicineColor medicineColor = createMedicineColor(colorFront, colorBack);
-        MarkCode markCode = createMarkCode(markCodeFrontAnal, markCodeBackAnal, markCodeFrontImg, markCodeBackImg);
-        MedicineDate medicineDate = createMedicineDate(itemPermitDate, imgRegistTs, changeDate);
-        return Medicine.builder()
-                .itemSeq(itemSeq)
-                .etcOtcName(etcOtcName)
-                .itemImage(itemImage)
-                .itemName(itemName)
-                .classNoAndName(classNoAndName)
-                .lengAndThick(lengAndThick)
-                .medicineCompany(medicineCompany)
-                .medicineIdentification(medicineIdentification)
-                .medicineLine(medicineLine)
-                .medicineColor(medicineColor)
-                .markCode(markCode)
-                .medicineDate(medicineDate)
-                . build();
     }
 }

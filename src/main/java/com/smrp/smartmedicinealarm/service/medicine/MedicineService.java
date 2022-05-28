@@ -3,6 +3,7 @@ package com.smrp.smartmedicinealarm.service.medicine;
 import com.smrp.smartmedicinealarm.dto.medicine.CreateMedicineDto;
 import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
+import com.smrp.smartmedicinealarm.dto.medicine.UpdateMedicineDto;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition;
 import org.springframework.data.domain.Page;
 
@@ -17,4 +18,6 @@ public interface MedicineService {
      * 약품 추가
      */
     MedicineDetailsDto addMedicine(CreateMedicineDto medicineDto);
+
+    MedicineDetailsDto modifyMedicine(Long medicineId, UpdateMedicineDto medicineDto);
 }

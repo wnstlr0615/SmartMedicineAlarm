@@ -23,4 +23,9 @@ public class ClassNoAndName {
                 .className(className)
                 .build();
     }
+    //== 비즈니스 메서드 ==//
+    public void update(String classNo, String className){
+        this.classNo = classNo != null ? classNo : this.classNo;
+        this.className = className != null ? className : this.className;
+    }
 }

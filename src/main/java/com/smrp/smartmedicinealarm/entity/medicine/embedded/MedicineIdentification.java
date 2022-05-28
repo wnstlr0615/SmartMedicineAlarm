@@ -32,4 +32,13 @@ public class MedicineIdentification {
                 .formCodeName(formCodeName)
                 .build();
     }
+
+    //== 비즈니스 메서드 ==//
+    public void update(String printFront, String printBack, String drugShape, String chart, String formCodeName) {
+        this.printFront = printFront != null ? printFront : this.printFront;
+        this.printBack = printBack != null ? printBack : this.printBack;
+        this.drugShape = drugShape != null ? drugShape : this.drugShape;
+        this.chart = chart != null ? chart : this.chart;
+        this.formCodeName = formCodeName != null ? formCodeName : this.formCodeName;
+    }
 }

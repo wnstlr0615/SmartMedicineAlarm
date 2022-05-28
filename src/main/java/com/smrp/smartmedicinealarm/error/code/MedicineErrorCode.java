@@ -7,7 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum MedicineErrorCode implements ErrorCode{
     NOT_FOUND_MEDICINE("해당 id에 약품이 존재하지 않습니다.", 404),
-    ALREADY_REGISTER_MEDICINE("해당 약품은 이미 등록되어 있습니다.", 400);
+    ALREADY_REGISTER_MEDICINE("해당 약품은 이미 등록되어 있습니다.", 400),
+    DUPLICATED_MEDICINE_ITEMSEQ("해당 약품 일련번호와 같은 약품이 존재합니다.", 400)
+    ;
     private final String description;
     private final int status;
 }

@@ -27,4 +27,13 @@ public class LengAndThick {
                 .thick(thick)
                 .build();
     }
+
+    //== 비즈니스 메서드 ==//
+    public void update(String lengLong, String lengShort, String thick) {
+        this.lengLong = lengLong != null ? lengLong : this.lengLong;
+        this.lengShort = lengShort != null ? lengShort : this.lengShort;
+        this.thick = thick != null ? thick : this.thick;
+    }
+
+
 }

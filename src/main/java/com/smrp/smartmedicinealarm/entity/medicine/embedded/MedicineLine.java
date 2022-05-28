@@ -24,4 +24,10 @@ public class MedicineLine {
                 .lineBack(lineBack)
                 .build();
     }
+
+    //== 비즈니스 메서드 ==//
+    public void update(String lineFront, String lineBack) {
+        this.lineFront = lineFront != null ? lineFront : this.lineFront;
+        this.lineBack = lineBack != null ? lineBack : this.lineBack;
+    }
 }

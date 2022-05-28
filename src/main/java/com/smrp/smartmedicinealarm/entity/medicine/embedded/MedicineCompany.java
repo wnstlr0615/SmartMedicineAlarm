@@ -24,4 +24,10 @@ public class MedicineCompany {
                 .entpName(entpName)
                 .build();
     }
+
+    //== 비즈니스 메서드 ==//
+    public void update(Long entpSeq, String entpName) {
+        this.entpSeq = entpSeq != null ? entpSeq : this.entpSeq;
+        this.entpName = entpName != null ? entpName : this.entpName;
+    }
 }

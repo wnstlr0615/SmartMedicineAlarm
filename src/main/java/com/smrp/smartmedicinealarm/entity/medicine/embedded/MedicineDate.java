@@ -22,4 +22,10 @@ public class MedicineDate {
                 .changeDate(changeDate)
                 .build();
     }
+    //== 비즈니스 메서드 ==//
+    public void update(LocalDate itemPermitDate, LocalDate imgRegistTs, LocalDate changeDate) {
+        this.itemPermitDate = itemPermitDate != null ? itemPermitDate : this.itemPermitDate;
+        this.imgRegistTs = imgRegistTs != null ? imgRegistTs : this.imgRegistTs;
+        this.changeDate = changeDate != null ? changeDate : this.changeDate;
+    }
 }

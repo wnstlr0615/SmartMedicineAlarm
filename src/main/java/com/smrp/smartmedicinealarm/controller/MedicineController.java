@@ -3,6 +3,7 @@ package com.smrp.smartmedicinealarm.controller;
 import com.smrp.smartmedicinealarm.dto.medicine.CreateMedicineDto;
 import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
+import com.smrp.smartmedicinealarm.dto.medicine.UpdateMedicineDto;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition;
 import com.smrp.smartmedicinealarm.service.medicine.MedicineService;
 import io.swagger.annotations.ApiOperation;
@@ -79,7 +80,7 @@ public class MedicineController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation("약 정보 추가하기")
+    @ApiOperation("약 정보 추가 API")
     public ResponseEntity<?> medicineAdd(
             @Valid @RequestBody CreateMedicineDto medicineDto
     ) {
@@ -95,5 +96,21 @@ public class MedicineController {
                                         )
                         ).toUri()
         ).body(medicineDetailsDto);
+    }
+
+    @PatchMapping("/{medicineId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation("약 정보 업데이트 API")
+    public ResponseEntity<?> medicineModify(
+            @ApiParam(value = "약 PK", defaultValue = "1L")
+            @PathVariable Long medicineId,
+            @Valid @RequestBody UpdateMedicineDto medicineDto
+    ) {
+        MedicineDetailsDto medicineDetailsDto = medicineService.modifyMedicine(medicineId, medicineDto);
+        medicineDetailsDto.add(
+                linkTo(methodOn(MedicineController.class).medicineModify(medicineId, medicineDto)).withSelfRel(),
+                Link.of(linkTo(SwaggerController.class) + "#/medicine-controller/medicineModifyPATCH").withRel("profile")
+        );
+        return ResponseEntity.ok(medicineDetailsDto);
     }
 }

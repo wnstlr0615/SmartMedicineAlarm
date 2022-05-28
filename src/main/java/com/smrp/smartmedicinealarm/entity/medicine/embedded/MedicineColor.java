@@ -24,4 +24,10 @@ public class MedicineColor {
                 .colorBack(colorBack)
                 .build();
     }
+
+    //== 비즈니스 메서드 ==//
+    public void update(String colorFront, String colorBack) {
+        this.colorFront = colorFront != null ? colorFront : this.colorFront;
+        this.colorBack = colorBack != null ? colorBack : this.colorBack;
+    }
 }

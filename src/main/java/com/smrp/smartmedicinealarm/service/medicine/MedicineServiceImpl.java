@@ -3,6 +3,7 @@ package com.smrp.smartmedicinealarm.service.medicine;
 import com.smrp.smartmedicinealarm.dto.medicine.CreateMedicineDto;
 import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
+import com.smrp.smartmedicinealarm.dto.medicine.UpdateMedicineDto;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.error.code.MedicineErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.MedicineException;
@@ -41,6 +42,25 @@ public class MedicineServiceImpl implements MedicineService{
         Medicine medicine = saveMedicine(medicineDto);
         return MedicineDetailsDto.fromEntity(medicine);
 
+    }
+
+    @Override
+    @Transactional
+    public MedicineDetailsDto modifyMedicine(Long medicineId, UpdateMedicineDto medicineDto) {
+        Medicine medicine = getMedicine(medicineId);
+        validDuplicatedItemSeq(medicineDto.getItemSeq());
+        updateMedicine(medicine, medicineDto);
+        return MedicineDetailsDto.fromEntity(medicine);
+    }
+
+    private void validDuplicatedItemSeq(Long itemSeq) {
+        if(medicineRepository.countByItemSeq(itemSeq) > 0){
+            throw new MedicineException(MedicineErrorCode.DUPLICATED_MEDICINE_ITEMSEQ);
+        }
+    }
+
+    private void updateMedicine(Medicine medicine, UpdateMedicineDto medicineDto) {
+        medicine.updateByDto(medicineDto);
     }
 
     private void validAlreadyRegisterMedicine(CreateMedicineDto medicineDto) {
