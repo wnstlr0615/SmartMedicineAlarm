@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.controller;
 
+import com.smrp.smartmedicinealarm.dto.medicine.CreateMedicineDto;
 import com.smrp.smartmedicinealarm.dto.medicine.MedicineDetailsDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.model.medicine.MedicineSearchCondition;
@@ -14,8 +15,11 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -73,6 +77,23 @@ public class MedicineController {
         return ResponseEntity.ok(medicineDetailsDto);
     }
 
-
-
+    @PostMapping("")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation("약 정보 추가하기")
+    public ResponseEntity<?> medicineAdd(
+            @Valid @RequestBody CreateMedicineDto medicineDto
+    ) {
+        MedicineDetailsDto medicineDetailsDto = medicineService.addMedicine(medicineDto);
+        medicineDetailsDto.add(
+                linkTo(methodOn(MedicineController.class).medicineAdd(medicineDto)).withSelfRel(),
+                Link.of(linkTo(SwaggerController.class) + "#/medicine-controller/medicineAddPOST").withRel("profile")
+        );
+        return ResponseEntity.created(
+                        linkTo(
+                                methodOn(MedicineController.class)
+                                        .medicineDetails(medicineDetailsDto.getMedicineId()
+                                        )
+                        ).toUri()
+        ).body(medicineDetailsDto);
+    }
 }
