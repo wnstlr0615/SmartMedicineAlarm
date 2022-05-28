@@ -3,6 +3,7 @@ package com.smrp.smartmedicinealarm.config.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smrp.smartmedicinealarm.config.security.filter.JWTCheckFilter;
 import com.smrp.smartmedicinealarm.config.security.filter.JWTLoginFilter;
+import com.smrp.smartmedicinealarm.config.security.handler.CustomAccessDeniedHandler;
 import com.smrp.smartmedicinealarm.config.security.handler.CustomAuthenticationEntryPoint;
 import com.smrp.smartmedicinealarm.config.security.handler.JWTLoginAuthenticationFailHandler;
 import com.smrp.smartmedicinealarm.service.refreshtoken.RefreshTokenService;
@@ -44,14 +45,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web){
         web.ignoring()
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
+                .antMatchers(
+                        "/v3/api-docs", "/swagger-resources/configuration/ui",
+                        "/swagger-resources", "/swagger-resources/configuration/security",
+                        "/swagger-ui/", "/webjars/**","/swagger-ui/**"
+                )
+        ;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/api/v1/accounts").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/v1/medicines/**").permitAll()
                 .antMatchers("/api/v1/accounts/**").hasRole("NORMAL")
+                .antMatchers("/api/v1/medicines/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.POST, "/api/v1/login").anonymous()
                 .antMatchers(HttpMethod.POST, "/api/v1/logout").authenticated()
                 .anyRequest().authenticated()
@@ -61,6 +70,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        ;
+        http.exceptionHandling()
+                .accessDeniedHandler(new CustomAccessDeniedHandler(mapper))
         ;
         http
                 .addFilterAt(new JWTLoginFilter(authenticationManagerBean(), mapper, jwtUtils, authenticationFailureHandler(), refreshTokenService), UsernamePasswordAuthenticationFilter.class)

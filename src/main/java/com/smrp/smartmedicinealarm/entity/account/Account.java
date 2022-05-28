@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.entity.account;
 
+import com.smrp.smartmedicinealarm.entity.BaseTimeEntity;
 import lombok.*;
 
 import javax.persistence.*;
@@ -9,7 +10,7 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Account {
+public class Account extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long accountId;
