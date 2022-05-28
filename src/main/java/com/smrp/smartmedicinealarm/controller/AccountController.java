@@ -28,8 +28,7 @@ public class AccountController {
     @ApiOperation(value = "사용자 회원가입")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public NewAccountDto.Response accountAdd(
-            @Valid @RequestBody NewAccountDto.Request request,
-            BindingResult error
+            @Valid @RequestBody NewAccountDto.Request request
     ){
         return accountService.addAccount(request);
     }

@@ -23,6 +23,12 @@ public class ErrorResponse {
                 .errorMessage(errorCode.getDescription())
                 .build();
     }
+    public static ErrorResponse CreateErrorResponse(ErrorCode errorCode, String errorMessage){
+        return ErrorResponse.builder()
+                .errorCode(errorCode)
+                .errorMessage(errorMessage)
+                .build();
+    }
 
     public static ErrorResponse CreateErrorResponse(ErrorCode errorCode, List<FieldErrorDto> errors){
         return ErrorResponse.builder()
