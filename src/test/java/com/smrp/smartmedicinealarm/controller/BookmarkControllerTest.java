@@ -2,11 +2,15 @@ package com.smrp.smartmedicinealarm.controller;
 
 import com.smrp.smartmedicinealarm.annotation.MockNormalUser;
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
+import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.account.Gender;
 import com.smrp.smartmedicinealarm.entity.account.Role;
+import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
+import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
+import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.service.bookmark.BookmarkService;
@@ -20,15 +24,25 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto.Request.createNewBookmarkRequestDto;
 import static com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto.Response.createNewBookmarkResponseDto;
 import static com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto.createSimpleMedicineDto;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.ClassNoAndName.createClassNoAndName;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.LengAndThick.createLengAndThick;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MarkCode.createMarkCode;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineColor.createMedicineColor;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineCompany.createMedicineCompany;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineDate.createMedicineDate;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineIdentification.createMedicineIdentification;
+import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MedicineLine.crateMedicineLine;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -39,7 +53,7 @@ class BookmarkControllerTest extends BaseControllerTest{
     @MockBean
     BookmarkService bookmarkService;
     @Nested
-    @DisplayName("약 즐겨찾기 추가 API")
+    @DisplayName("[POST]약 즐겨찾기 추가 API")
     class WhenAddBookmark {
         @Test
         @MockNormalUser
@@ -145,6 +159,71 @@ class BookmarkControllerTest extends BaseControllerTest{
             verify(bookmarkService).addBookmark(any(Account.class), any(NewBookmarkDto.Request.class));
         }
 
+    }
+    @Nested
+    @DisplayName("[GET]즐겨찾기 목록 보기")
+    class WhenFindAllBookmark{
+        @Test
+        @DisplayName("[성공][GET] 즐겨찾기 목록 보기")
+        public void givenAccount_whenFindAllBookmark_thenReturnBookmarkList() throws Exception{
+            //given
+            Account account = createAccount();
+            Medicine medicine = getMedicine();
+            List<SimpleMedicineDto> medicines = List.of(
+                    SimpleMedicineDto.fromEntity(medicine)
+            );
+            account.addBookmark(Bookmark.createBookmark(account, medicine));
+            when(bookmarkService.findAllBookmark(any(Account.class)))
+                    .thenReturn(
+                            SimpleBookmarkDto.createSimpleBookmarkDto(account.getAccountId(), account.getEmail(), medicines)
+                    );
+            //when //then
+            mvc.perform(get("/api/v1/accounts/me/bookmarks")
+                .contentType(MediaType.APPLICATION_JSON)
+                            .with(
+                                    authentication(
+                                            getAuthentication(
+                                                    account
+                                            )
+                                    )
+                            )
+            )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("findAllBookmark"))
+                .andExpect(handler().handlerType(BookmarkController.class))
+                .andExpect(jsonPath("$.accountId").value(account.getAccountId()))
+                .andExpect(jsonPath("$.email").value(account.getEmail()))
+                .andExpect(jsonPath("$.medicines[0].medicineId").exists())
+                .andExpect(jsonPath("$.medicines[0].itemSeq").exists())
+                .andExpect(jsonPath("$.medicines[0].itemName").exists())
+                .andExpect(jsonPath("$.medicines[0].itemImage").exists())
+                .andExpect(jsonPath("$.medicines[0].etcOtcName").exists())
+                .andExpect(jsonPath("$.medicines[0].entpName").exists())
+                .andExpect(jsonPath("$.medicines[0]._links.self.href").exists())
+                .andExpect(jsonPath("$._links.self").isNotEmpty())
+                .andExpect(jsonPath("$._links.profile").isNotEmpty())
+            ;
+            verify(bookmarkService).findAllBookmark(any(Account.class));
+        }
+    }
+
+    private Medicine getMedicine() {
+        Long itemSeq = 200611524L;
+        String  itemName =  "마도파정";
+        String itemImage =  "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/148609543321800149";
+        String etcOtcName = "전문의약품";
+        ClassNoAndName classNoAndName = createClassNoAndName("01190", "기타의 중추신경용약");
+        LengAndThick lengAndThick = createLengAndThick("13.0", "13.0", "3.5");
+        MedicineCompany medicineCompany = createMedicineCompany(20161439L, "(주)한국로슈");
+        MedicineIdentification medicineIdentification
+                = createMedicineIdentification("RO분할선C분할선HE분할선마크분할선", "십자분할선", "원형", "십자눈금이 새겨져 있는 분홍색의 원형정제이다", "나정");
+        MedicineLine medicineLine = crateMedicineLine("+", "+");
+        MedicineColor medicineColor = createMedicineColor("분홍", "");
+        MarkCode markCode = createMarkCode("육각형", "", "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147938640332900169", "");
+        MedicineDate medicineDate = createMedicineDate(LocalDate.parse("2006-11-27"), LocalDate.parse("2004-12-22"), LocalDate.parse("2020-02-27"));
+        return Medicine.createMedicine(1L, itemSeq, itemName, itemImage, etcOtcName, classNoAndName, lengAndThick,
+                        medicineCompany, medicineIdentification, medicineLine, medicineColor, markCode, medicineDate);
     }
     private UsernamePasswordAuthenticationToken getAuthentication(Account account) {
         return new UsernamePasswordAuthenticationToken(

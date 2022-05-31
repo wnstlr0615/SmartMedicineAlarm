@@ -2,10 +2,12 @@ package com.smrp.smartmedicinealarm.service.bookmark;
 
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto.Request;
+import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.account.Gender;
 import com.smrp.smartmedicinealarm.entity.account.Role;
+import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
@@ -24,6 +26,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static com.smrp.smartmedicinealarm.entity.medicine.Medicine.createMedicine;
 import static com.smrp.smartmedicinealarm.entity.medicine.embedded.ClassNoAndName.createClassNoAndName;
 import static com.smrp.smartmedicinealarm.entity.medicine.embedded.LengAndThick.createLengAndThick;
 import static com.smrp.smartmedicinealarm.entity.medicine.embedded.MarkCode.createMarkCode;
@@ -61,7 +64,7 @@ class BookmarkServiceImplTest {
                     .thenReturn(Optional.of(account));
             when(medicineRepository.findAllByMedicineIdIn(any()))
                     .thenReturn(
-                            getMedicines()
+                            List.of(getMedicine())
                     );
 
             //when
@@ -136,7 +139,40 @@ class BookmarkServiceImplTest {
         }
     }
 
-    private List<Medicine> getMedicines() {
+    @Nested
+    @DisplayName("즐겨찾기 목록 보기")
+    class WhenFindAllBookmark{
+        @Test
+        @DisplayName("[성공] 즐겨찾기 목록 보기")
+        public void givenAccount_whenFindAllBookmark_thenReturnBookmarkList(){
+            //given
+            Account account = createAccount(AccountStatus.USE);
+            Medicine medicine = getMedicine();
+            account.addBookmark(Bookmark.createBookmark(account, medicine));
+            //when
+            SimpleBookmarkDto simpleBookmarkDto = bookmarkService.findAllBookmark(account);
+            //then
+            assertAll(
+                    () -> assertThat(simpleBookmarkDto)
+                            .hasFieldOrPropertyWithValue("accountId", account.getAccountId())
+                            .hasFieldOrPropertyWithValue("email", account.getEmail())
+                            .hasFieldOrProperty("medicines"),
+                    () -> assertThat(simpleBookmarkDto.getMedicines()).allSatisfy(simpleMedicineDto -> {
+                                assertThat(simpleMedicineDto.getMedicineId()).isEqualTo(1L);
+                                assertThat(simpleMedicineDto.getItemSeq()).isEqualTo(200611524L);
+                                assertThat(simpleMedicineDto.getItemName()).isEqualTo("마도파정");
+                                assertThat(simpleMedicineDto.getItemImage()).isEqualTo("https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/148609543321800149");
+                                assertThat(simpleMedicineDto.getEtcOtcName()).isEqualTo("전문의약품");
+                                assertThat(simpleMedicineDto.getEntpName()).isEqualTo("(주)한국로슈");
+                            }
+                    )
+
+            );
+
+        }
+    }
+
+    private Medicine getMedicine() {
         Long itemSeq = 200611524L;
         String  itemName =  "마도파정";
         String itemImage =  "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/148609543321800149";
@@ -150,10 +186,8 @@ class BookmarkServiceImplTest {
         MedicineColor medicineColor = createMedicineColor("분홍", "");
         MarkCode markCode = createMarkCode("육각형", "", "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147938640332900169", "");
         MedicineDate medicineDate = createMedicineDate(LocalDate.parse("2006-11-27"), LocalDate.parse("2004-12-22"), LocalDate.parse("2020-02-27"));
-        return List.of(
-                Medicine.createMedicine(1L, itemSeq, itemName, itemImage, etcOtcName, classNoAndName, lengAndThick,
-                medicineCompany, medicineIdentification, medicineLine, medicineColor, markCode, medicineDate)
-                );
+        return createMedicine(1L, itemSeq, itemName, itemImage, etcOtcName, classNoAndName, lengAndThick,
+                medicineCompany, medicineIdentification, medicineLine, medicineColor, markCode, medicineDate);
     }
     private Account createAccount(AccountStatus accountStatus) {
         return Account.createAccount(1L, "joon@naver.com", "asdasdasd", "joon", Gender.MAN, accountStatus, Role.NORMAL);

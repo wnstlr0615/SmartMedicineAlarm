@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.service.bookmark;
 
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
+import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
@@ -43,6 +44,21 @@ public class BookmarkServiceImpl implements BookmarkService{
 
         //SimpleDto 로 변환
         return createNewBookmarkResponseDot(account, medicines);
+    }
+
+    @Override
+    public SimpleBookmarkDto findAllBookmark(Account account) {
+
+        return createSimpleMedicineDto(account);
+    }
+
+    private SimpleBookmarkDto createSimpleMedicineDto(Account account) {
+        List<SimpleMedicineDto> simpleMedicineDtos = account.getBookmarks().stream()
+                .map(bookmark ->
+                        SimpleMedicineDto.fromEntity(bookmark.getMedicine())
+                ).collect(Collectors.toList());
+        return SimpleBookmarkDto.createSimpleBookmarkDto(account.getAccountId(), account.getEmail(), simpleMedicineDtos);
+
     }
 
     private NewBookmarkDto.Response createNewBookmarkResponseDot(Account account, List<Medicine> medicines) {
