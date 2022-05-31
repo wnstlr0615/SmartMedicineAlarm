@@ -1,20 +1,24 @@
 package com.smrp.smartmedicinealarm.service.bookmark;
 
+import com.smrp.smartmedicinealarm.dto.RemoveBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
+import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
+import com.smrp.smartmedicinealarm.repository.BookmarkRepository;
 import com.smrp.smartmedicinealarm.repository.medicine.MedicineRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.smrp.smartmedicinealarm.entity.bookmark.Bookmark.createBookmark;
@@ -27,6 +31,7 @@ import static com.smrp.smartmedicinealarm.error.code.UserErrorCode.ALREADY_DELET
 public class BookmarkServiceImpl implements BookmarkService{
     private final MedicineRepository medicineRepository;
     private final AccountRepository accountRepository;
+    private final BookmarkRepository bookmarkRepository;
     @Override
     @Transactional
     public NewBookmarkDto.Response addBookmark(Account account, NewBookmarkDto.Request bookmarkDto) {
@@ -46,38 +51,6 @@ public class BookmarkServiceImpl implements BookmarkService{
         return createNewBookmarkResponseDot(account, medicines);
     }
 
-    @Override
-    public SimpleBookmarkDto findAllBookmark(Account account) {
-
-        return createSimpleMedicineDto(account);
-    }
-
-    private SimpleBookmarkDto createSimpleMedicineDto(Account account) {
-        List<SimpleMedicineDto> simpleMedicineDtos = account.getBookmarks().stream()
-                .map(bookmark ->
-                        SimpleMedicineDto.fromEntity(bookmark.getMedicine())
-                ).collect(Collectors.toList());
-        return SimpleBookmarkDto.createSimpleBookmarkDto(account.getAccountId(), account.getEmail(), simpleMedicineDtos);
-
-    }
-
-    private NewBookmarkDto.Response createNewBookmarkResponseDot(Account account, List<Medicine> medicines) {
-        List<SimpleMedicineDto> simpleMedicineDtos = medicines.stream().map(SimpleMedicineDto::fromEntity).collect(Collectors.toList());
-        return NewBookmarkDto.Response.createNewBookmarkResponseDto(account.getAccountId(), account.getEmail(), simpleMedicineDtos);
-    }
-
-
-
-    private List<Medicine> getMedicineListByMedicineIdIn(NewBookmarkDto.Request bookmarkDto) {
-        return medicineRepository.findAllByMedicineIdIn(bookmarkDto.getMedicineIds());
-    }
-
-    private void accountAddBookmarks(List<Medicine> medicines, Account accountEntity) {
-        medicines.stream()
-                .map(medicine -> createBookmark(accountEntity, medicine))
-                .forEach(bookmark -> bookmark.setAccount(accountEntity));
-    }
-
     private Account getAccountById(Long accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(
@@ -92,4 +65,78 @@ public class BookmarkServiceImpl implements BookmarkService{
             throw new UserException(ACCOUNT_STATUS_IS_DORMANT);
         }
     }
+    private List<Medicine> getMedicineListByMedicineIdIn(NewBookmarkDto.Request bookmarkDto) {
+        return medicineRepository.findAllByMedicineIdIn(bookmarkDto.getMedicineIds());
+    }
+    private void accountAddBookmarks(List<Medicine> medicines, Account accountEntity) {
+        medicines.stream()
+                .map(medicine -> createBookmark(accountEntity, medicine))
+                .forEach(bookmark -> bookmark.setAccount(accountEntity));
+    }
+    private NewBookmarkDto.Response createNewBookmarkResponseDot(Account account, List<Medicine> medicines) {
+        List<SimpleMedicineDto> simpleMedicineDtos = medicines.stream().map(SimpleMedicineDto::fromEntity).collect(Collectors.toList());
+        return NewBookmarkDto.Response.createNewBookmarkResponseDto(account.getAccountId(), account.getEmail(), simpleMedicineDtos);
+    }
+
+
+    @Override
+    public SimpleBookmarkDto findAllBookmark(Account account) {
+        Account accountEntity = getDetailAccountById(account.getAccountId());
+        // 약 목록을 dto 로 변환
+        return createSimpleMedicineDto(accountEntity);
+    }
+    private SimpleBookmarkDto createSimpleMedicineDto(Account account) {
+        List<SimpleMedicineDto> simpleMedicineDtos = account.getBookmarks().stream()
+                .map(bookmark ->
+                        SimpleMedicineDto.fromEntity(bookmark.getMedicine())
+                ).collect(Collectors.toList());
+        return SimpleBookmarkDto.createSimpleBookmarkDto(account.getAccountId(), account.getEmail(), simpleMedicineDtos);
+
+    }
+
+    @Override
+    @Transactional
+    public SimpleBookmarkDto bookmarkRemove(Account account, RemoveBookmarkDto removeBookmarkDto) {
+        // 사용자 상세 조회
+        Account accountEntity = getDetailAccountById(account.getAccountId());
+
+        //사용자 상태 검증
+        verifyAccountStatusAvailable(accountEntity);
+
+        //북마크 제거
+        removeBookmarks(accountEntity, removeBookmarkDto);
+
+        //삭제하고 남은 즐겨찾기 목록 반환
+        return createSimpleMedicineDto(accountEntity);
+    }
+    public Account getDetailAccountById(Long accountId){
+        return accountRepository.findDetailByAccountId(accountId)
+                .orElseThrow(
+                        () -> new UserException(UserErrorCode.NOT_FOUND_USER_ID)
+                );
+    }
+
+    private void removeBookmarks(Account account, RemoveBookmarkDto removeBookmarkDto) {
+        Set<Bookmark> removeBookmarks = account.getBookmarks().stream()
+                .filter(bookmark ->
+                        removeBookmarkDto.getMedicineIds()
+                                .contains(
+                                        bookmark.getMedicine().getMedicineId())
+                ).collect(Collectors.toSet());
+
+        bookmarkRepository.deleteAllInBatch(removeBookmarks);
+        account.removeBookmarks(removeBookmarks);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 }

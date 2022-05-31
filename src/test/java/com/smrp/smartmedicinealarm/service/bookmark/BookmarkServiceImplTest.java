@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.service.bookmark;
 
+import com.smrp.smartmedicinealarm.dto.RemoveBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto.Request;
 import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
@@ -13,6 +14,7 @@ import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.repository.AccountRepository;
+import com.smrp.smartmedicinealarm.repository.BookmarkRepository;
 import com.smrp.smartmedicinealarm.repository.medicine.MedicineRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -47,6 +49,8 @@ class BookmarkServiceImplTest {
     MedicineRepository medicineRepository;
     @Mock
     AccountRepository accountRepository;
+    @Mock
+    BookmarkRepository bookmarkRepository;;
     @InjectMocks
     BookmarkServiceImpl bookmarkService;
 
@@ -149,6 +153,13 @@ class BookmarkServiceImplTest {
             Account account = createAccount(AccountStatus.USE);
             Medicine medicine = getMedicine();
             account.addBookmark(Bookmark.createBookmark(account, medicine));
+            when(accountRepository.findDetailByAccountId(anyLong()))
+                    .thenReturn(
+                            Optional.of(
+                                    account
+                            )
+                    );
+
             //when
             SimpleBookmarkDto simpleBookmarkDto = bookmarkService.findAllBookmark(account);
             //then
@@ -168,7 +179,40 @@ class BookmarkServiceImplTest {
                     )
 
             );
+            verify(accountRepository).findDetailByAccountId(eq(account.getAccountId()));
+        }
+    }
 
+    @Nested
+    @DisplayName("즐겨찾기 목록에서 제거")
+    class WhenRemoveBookmark{
+        @Test
+        @DisplayName("[성공] 즐겨찾기 목록에서 제거")
+        public void givenMedicineIds_whenRemoveBookmark_thenReturnSimpleBookmarkDto(){
+            //given
+            Account account = createAccount(AccountStatus.USE);
+            Medicine medicine = getMedicine();
+            account.addBookmark(Bookmark.createBookmark(account, medicine));
+            when(accountRepository.findDetailByAccountId(anyLong()))
+                    .thenReturn(
+                            Optional.of(account)
+                    );
+            doNothing()
+                    .when(bookmarkRepository).deleteAllInBatch(any());
+            //when
+            SimpleBookmarkDto simpleBookmarkDto = bookmarkService.bookmarkRemove(account, RemoveBookmarkDto.createRemoveBookmarkDto(List.of(1L)));
+
+            //then
+            assertAll(
+                    () -> assertThat(simpleBookmarkDto)
+                            .hasFieldOrPropertyWithValue("accountId", account.getAccountId())
+                            .hasFieldOrPropertyWithValue("email", account.getEmail())
+                            .hasFieldOrProperty("medicines"),
+                    () -> assertThat(simpleBookmarkDto.getMedicines().size()).isEqualTo(0)
+                );
+
+            verify(accountRepository).findDetailByAccountId(eq(account.getAccountId()));
+            verify(bookmarkRepository).deleteAllInBatch(any());
         }
     }
 

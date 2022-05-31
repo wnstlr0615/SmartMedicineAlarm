@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.controller;
 
 import com.smrp.smartmedicinealarm.annotation.MockNormalUser;
+import com.smrp.smartmedicinealarm.dto.RemoveBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
@@ -42,8 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -205,6 +205,33 @@ class BookmarkControllerTest extends BaseControllerTest{
                 .andExpect(jsonPath("$._links.profile").isNotEmpty())
             ;
             verify(bookmarkService).findAllBookmark(any(Account.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("[DELETE] 즐겨찾기 목록에서 제거 API")
+    class WhenMedicineRemove{
+        @Test
+        @DisplayName("[성공][DELETE] 즐겨찾기 목록에서 약 제거하기")
+        public void givenRemoveMedicineIds_whenBookmarkRemove_thenSuccess() throws Exception{
+            //given
+            List<Long> removeBookmarkList = List.of(1L, 2L, 3L);
+
+            //when //then
+            mvc.perform(delete("/api/v1/accounts/me/medicines")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        mapper.writeValueAsString(
+                                RemoveBookmarkDto.createRemoveBookmarkDto(removeBookmarkList)
+                        )
+                )
+            )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links.self").isNotEmpty())
+                .andExpect(jsonPath("$._links.profile").isNotEmpty())
+            ;
+            verify(bookmarkService).bookmarkRemove(any(Account.class), any(RemoveBookmarkDto.class));
         }
     }
 

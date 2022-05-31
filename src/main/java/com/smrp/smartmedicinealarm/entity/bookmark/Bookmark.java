@@ -30,6 +30,24 @@ public class Bookmark extends BaseEntity {
                 .build();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Bookmark bookmark = (Bookmark) o;
+
+        if (!account.getAccountId().equals(bookmark.account.getAccountId())) return false;
+        return medicine.getMedicineId().equals(bookmark.medicine.getMedicineId());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = account.hashCode();
+        result = 31 * result + medicine.hashCode();
+        return result;
+    }
+
     public void setAccount(Account account) {
         if(account != null ){
             account.getBookmarks().remove(this);
