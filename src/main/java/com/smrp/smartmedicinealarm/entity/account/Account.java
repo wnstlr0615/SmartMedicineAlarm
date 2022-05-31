@@ -18,7 +18,7 @@ public class Account extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long accountId;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Bookmark> bookmarks = new LinkedHashSet<>();
 
 
@@ -43,15 +43,7 @@ public class Account extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    public void addBookmark(Bookmark bookmark) {
-        if(bookmarks == null){
-            bookmarks = new LinkedHashSet<>();
-        }
-        bookmarks.add(bookmark);
-        if(bookmark.getAccount() != this){
-            bookmark.setAccount(this);
-        }
-    }
+
 
 
     //== 생성 메서드 ==//
@@ -70,8 +62,20 @@ public class Account extends BaseTimeEntity {
 
     //== 비즈니스 메서드 ==//
 
+    //== 비밀번호 설정 ==//
     public void setBcryptPassword(String bcryptPassword){
         this.password = bcryptPassword;
+    }
+
+    //== 북마크 추가 ==//
+    public void addBookmark(Bookmark bookmark) {
+        if(bookmarks == null){
+            bookmarks = new LinkedHashSet<>();
+        }
+        bookmarks.add(bookmark);
+        if(bookmark.getAccount() != this){
+            bookmark.setAccount(this);
+        }
     }
 
     //== 사용자 계정 삭제 ==//
@@ -85,5 +89,8 @@ public class Account extends BaseTimeEntity {
         this.gender = gender;
     }
 
-
+    //==북마크 제거 ==//
+    public void removeBookmarks(Set<Bookmark> removeBookmarks) {
+        bookmarks.removeAll(removeBookmarks);
+    }
 }
