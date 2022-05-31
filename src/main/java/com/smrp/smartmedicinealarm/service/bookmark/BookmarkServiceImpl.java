@@ -81,6 +81,7 @@ public class BookmarkServiceImpl implements BookmarkService{
 
     @Override
     public SimpleBookmarkDto findAllBookmark(Account account) {
+        // 사용자 상세 조회
         Account accountEntity = getDetailAccountById(account.getAccountId());
         // 약 목록을 dto 로 변환
         return createSimpleMedicineDto(accountEntity);
