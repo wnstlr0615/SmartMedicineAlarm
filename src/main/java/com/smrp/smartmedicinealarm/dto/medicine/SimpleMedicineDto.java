@@ -62,4 +62,14 @@ public class SimpleMedicineDto extends RepresentationModel<SimpleMedicineDto> {
                 .entpName (entpName)
                 .build();
     }
+    public static SimpleMedicineDto fromEntity(Medicine medicine){
+        return SimpleMedicineDto.builder()
+                .medicineId(medicine.getMedicineId())
+                .itemSeq(medicine.getItemSeq())
+                .itemName(medicine.getItemName())
+                .itemImage(medicine.getItemImage())
+                .etcOtcName(medicine.getEtcOtcName())
+                .entpName(medicine.getMedicineCompany().getEntpName())
+                .build();
+    }
 }

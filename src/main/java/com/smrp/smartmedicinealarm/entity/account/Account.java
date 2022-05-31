@@ -1,9 +1,12 @@
 package com.smrp.smartmedicinealarm.entity.account;
 
 import com.smrp.smartmedicinealarm.entity.BaseTimeEntity;
+import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -14,6 +17,10 @@ public class Account extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long accountId;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Bookmark> bookmarks = new LinkedHashSet<>();
+
 
     @Column(name = "email", nullable = false)
     private String email;
@@ -37,6 +44,8 @@ public class Account extends BaseTimeEntity {
     private Role role;
 
 
+
+
     //== 생성 메서드 ==//
     public static Account createAccount(Long accountId, String email, String password, String name, Gender gender, AccountStatus status, Role role){
         return Account.builder()
@@ -47,13 +56,26 @@ public class Account extends BaseTimeEntity {
                 .gender(gender)
                 .status(status)
                 .role(role)
+                .bookmarks(new LinkedHashSet<>())
                 .build();
     }
 
     //== 비즈니스 메서드 ==//
 
+    //== 비밀번호 설정 ==//
     public void setBcryptPassword(String bcryptPassword){
         this.password = bcryptPassword;
+    }
+
+    //== 북마크 추가 ==//
+    public void addBookmark(Bookmark bookmark) {
+        if(bookmarks == null){
+            bookmarks = new LinkedHashSet<>();
+        }
+        bookmarks.add(bookmark);
+        if(bookmark.getAccount() != this){
+            bookmark.setAccount(this);
+        }
     }
 
     //== 사용자 계정 삭제 ==//
@@ -65,5 +87,10 @@ public class Account extends BaseTimeEntity {
     public void updateInfo(String name, Gender gender) {
         this.name = name;
         this.gender = gender;
+    }
+
+    //==북마크 제거 ==//
+    public void removeBookmarks(Set<Bookmark> removeBookmarks) {
+        bookmarks.removeAll(removeBookmarks);
     }
 }

@@ -11,10 +11,7 @@ import lombok.*;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 
 public class NewAccountDto {
     @Getter
@@ -38,15 +35,24 @@ public class NewAccountDto {
 
         @NotNull(message = "성별 입력은 필수 입니다.")
         @ApiModelProperty(value = "사용자 성별", example = "MAN,WOMAN")
-        private Gender gender;
+        private String gender;
 
+        @AssertTrue(message = "Gender 은 MAN 또는 WOMAN 만 입력 가능합니다.")
+        private boolean isGender(){
+            try {
+                Gender.valueOf(gender);
+            } catch (Exception e) {
+                return false;
+            }
+            return true;
+        }
 
         public static Request createNewAccountDtoRequest(String email, String password, String name, Gender gender){
             return Request.builder()
                     .email(email)
                     .password(password)
                     .name(name)
-                    .gender(gender)
+                    .gender(gender.name())
                     .build();
         }
 
@@ -55,7 +61,7 @@ public class NewAccountDto {
                     .email(email)
                     .name(name)
                     .password(password)
-                    .gender(gender)
+                    .gender(Gender.valueOf(gender))
                     .status(AccountStatus.USE)
                     .role(Role.NORMAL)
                     .accountId(null)
