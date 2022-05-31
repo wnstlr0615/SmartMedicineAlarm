@@ -45,7 +45,7 @@ public class MedicineCustomRepositoryImpl  implements MedicineCustomRepository{
                                 qm.etcOtcName, qm.medicineCompany.entpName))
                 .from(qm)
                 .where(itemNameContains, medicineShapeIn, medicineColorIn, medicineLineIn)
-                .orderBy(medicine.itemSeq.asc())
+                .orderBy(medicine.medicineId.asc())
                 .limit(pageRequest.getPageSize())
                 .offset(pageRequest.getOffset())
                 .fetch();

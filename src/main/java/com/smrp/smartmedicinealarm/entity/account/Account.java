@@ -1,9 +1,12 @@
 package com.smrp.smartmedicinealarm.entity.account;
 
 import com.smrp.smartmedicinealarm.entity.BaseTimeEntity;
+import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -14,6 +17,10 @@ public class Account extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long accountId;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    private Set<Bookmark> bookmarks = new LinkedHashSet<>();
+
 
     @Column(name = "email", nullable = false)
     private String email;
@@ -36,6 +43,16 @@ public class Account extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    public void addBookmark(Bookmark bookmark) {
+        if(bookmarks == null){
+            bookmarks = new LinkedHashSet<>();
+        }
+        bookmarks.add(bookmark);
+        if(bookmark.getAccount() != this){
+            bookmark.setAccount(this);
+        }
+    }
+
 
     //== 생성 메서드 ==//
     public static Account createAccount(Long accountId, String email, String password, String name, Gender gender, AccountStatus status, Role role){
@@ -47,6 +64,7 @@ public class Account extends BaseTimeEntity {
                 .gender(gender)
                 .status(status)
                 .role(role)
+                .bookmarks(new LinkedHashSet<>())
                 .build();
     }
 
@@ -66,4 +84,6 @@ public class Account extends BaseTimeEntity {
         this.name = name;
         this.gender = gender;
     }
+
+
 }
