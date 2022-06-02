@@ -38,7 +38,6 @@ public class SimpleMedicineDto extends RepresentationModel<SimpleMedicineDto> {
 
 
     //== 생성 메서드 ==//
-
     public SimpleMedicineDto(Medicine medicine){
         BeanUtils.copyProperties(medicine, this);
     }
