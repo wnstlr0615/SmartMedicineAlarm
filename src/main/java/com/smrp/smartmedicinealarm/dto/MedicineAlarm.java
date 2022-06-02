@@ -23,4 +23,27 @@ public class MedicineAlarm extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medicine_id" , nullable = false, updatable = false)
     private Medicine medicine;
+
+    //== 생성 메서드 ==//
+    public static MedicineAlarm createMedicineAlarm(Long medicationId, Alarm alarm,  Medicine medicine) {
+        return MedicineAlarm.builder()
+                .medicineAlarmId(medicationId)
+                .alarm(alarm)
+                .medicine(medicine)
+                .build();
+    }
+
+    public static MedicineAlarm createMedicineAlarm(Alarm alarm,  Medicine medicine) {
+        return MedicineAlarm.createMedicineAlarm(null, alarm, medicine);
+    }
+
+    public void setAlarm(Alarm alarm) {
+        if(alarm.getMedicineAlarms() != null){
+            alarm.getMedicineAlarms().remove(this);
+        }
+        this.alarm = alarm;
+        if(alarm.getMedicineAlarms() == null || !alarm.getMedicineAlarms().contains(this)){
+            alarm.addMedicineAlarm(this);
+        }
+    }
 }

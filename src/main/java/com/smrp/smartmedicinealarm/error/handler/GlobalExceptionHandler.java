@@ -3,8 +3,6 @@ package com.smrp.smartmedicinealarm.error.handler;
 import com.smrp.smartmedicinealarm.error.code.ErrorCode;
 import com.smrp.smartmedicinealarm.error.code.GlobalErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.CustomRuntimeException;
-import com.smrp.smartmedicinealarm.error.exception.MedicineException;
-import com.smrp.smartmedicinealarm.error.exception.UserException;
 import com.smrp.smartmedicinealarm.error.response.ErrorResponse;
 import com.smrp.smartmedicinealarm.error.response.FieldErrorDto;
 import lombok.extern.slf4j.Slf4j;
@@ -26,10 +24,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler({
-            UserException.class,
-            MedicineException.class
-    })
+    @ExceptionHandler(CustomRuntimeException.class)
     private ResponseEntity<?> customRuntimeExceptionHandler(CustomRuntimeException e, HttpServletRequest request){
         printLog(e, request);
         return createErrorResponse(e);

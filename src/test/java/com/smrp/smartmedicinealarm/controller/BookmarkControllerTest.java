@@ -6,9 +6,6 @@ import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
-import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
-import com.smrp.smartmedicinealarm.entity.account.Gender;
-import com.smrp.smartmedicinealarm.entity.account.Role;
 import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
@@ -22,8 +19,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -251,18 +246,6 @@ class BookmarkControllerTest extends BaseControllerTest{
         MedicineDate medicineDate = createMedicineDate(LocalDate.parse("2006-11-27"), LocalDate.parse("2004-12-22"), LocalDate.parse("2020-02-27"));
         return Medicine.createMedicine(1L, itemSeq, itemName, itemImage, etcOtcName, classNoAndName, lengAndThick,
                         medicineCompany, medicineIdentification, medicineLine, medicineColor, markCode, medicineDate);
-    }
-    private UsernamePasswordAuthenticationToken getAuthentication(Account account) {
-        return new UsernamePasswordAuthenticationToken(
-                account,
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_NORMAL")
-                )
-        );
-    }
-
-    private Account createAccount() {
-        return Account.createAccount(1L, "joon@naver.com", "asdasdasd", "joon", Gender.MAN, AccountStatus.USE, Role.NORMAL);
     }
 
     private List<SimpleMedicineDto> getSimpleMedicineDtos(){
