@@ -54,6 +54,26 @@ public class AlarmServiceImpl implements AlarmService{
         return AlarmDetailDto.fromEntity(alarm);
     }
 
+    @Override
+    @Transactional
+    public void removeAlarm(Account account, Long alarmId) {
+        //알람 조회
+        Alarm alarm = getAlarmById(alarmId);
+
+        // 알람 사용자 접근 검증
+        validAlarmAccessAble(alarm, account);
+
+        // 알람 제거
+        alarmRemove(alarm);
+    }
+
+    private void alarmRemove(Alarm alarm) {
+        if(alarm.isDeleted()){
+            throw new AlarmException(AlarmErrorCode.ALREADY_DELETED_ALARM);
+        }
+        alarm.remove();
+    }
+
     private void validAlarmAccessAble(Alarm alarm, Account account) {
         if(!alarm.getAccount().getAccountId().equals(account.getAccountId())){
             throw new AlarmException(AlarmErrorCode.ACCESS_DENIED_ALARM);

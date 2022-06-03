@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.controller;
 
+import com.smrp.smartmedicinealarm.dto.ResponseResult;
 import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
@@ -69,6 +70,27 @@ public class AlarmController {
                 simpleMedicineDto.add(
                         linkTo(methodOn(MedicineController.class).medicineDetails(simpleMedicineDto.getMedicineId())).withSelfRel()
                 ));
+    }
+
+    @DeleteMapping("/{alarmId}")
+    @PreAuthorize("isAuthenticated()")
+    @ApiOperation(value = "약 알림 제거하기")
+    public ResponseEntity<?> alarmRemove(
+            @AuthenticationPrincipal Account account,
+            @ApiParam(value = "알람 PK", example = "1L")
+            @PathVariable Long alarmId
+    ) {
+        alarmService.removeAlarm(account, alarmId);
+        ResponseResult success = ResponseResult.success("약알림이 성공적으로 제거되었습니다.");
+        alarmRemoveAddLink(account, alarmId, success);
+        return ResponseEntity.ok(success);
+    }
+
+    private void alarmRemoveAddLink(Account account, Long alarmId, ResponseResult success) {
+        success.add(
+                linkTo(methodOn(AlarmController.class).alarmRemove(account, alarmId)).withSelfRel(),
+                Link.of(linkTo(SwaggerController.class) + "/#/alarm-controller/alarmRemoveDELETE").withRel("profile")
+        );
     }
 
 }

@@ -77,4 +77,11 @@ public class Alarm extends BaseTimeEntity {
         }
 
     }
+
+    public void remove() {
+        if(!deleted) {
+            this.deleted = true;
+            this.deletedAt =LocalDateTime.now();
+        }
+    }
 }

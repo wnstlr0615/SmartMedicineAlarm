@@ -21,14 +21,11 @@ import static com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto.Request.createNe
 import static com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto.createSimpleMedicineDto;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = AlarmController.class)
 class AlarmControllerTest extends BaseControllerTest {
@@ -145,6 +142,8 @@ class AlarmControllerTest extends BaseControllerTest {
             )
                 .andDo(print())
                 .andExpect(status().isOk())
+                .andExpect(handler().handlerType(AlarmController.class))
+                .andExpect(handler().methodName("alarmDetails"))
                 .andExpect(jsonPath("$.alarmId").value(alarmId))
                 .andExpect(jsonPath("$.title").value(title))
                 .andExpect(jsonPath("$.doseCount").value(doseCount))
@@ -212,6 +211,63 @@ class AlarmControllerTest extends BaseControllerTest {
                     .andExpect(jsonPath("$.errorMessage").value(errorCode.getDescription()))
             ;
             verify(alarmService).findAlarmDetails(any(Account.class), anyLong());
+        }
+    }
+    @Nested
+    @DisplayName("[DELETED] 알람 제거 API")
+    class WhenAlarmRemove{
+        @Test
+        @DisplayName("[성공][DELETE] 알람 제거 API")
+        public void givenAlarmId_whenAlarmRemove_thenSuccess() throws Exception {
+            //given
+            long alarmId = 1L;
+            Account account = createAccount();
+            doNothing().when(alarmService)
+                        .removeAlarm(any(Account.class), anyLong());
+            //when//then
+            mvc.perform(delete("/api/v1/alarms/{alarmId}", alarmId)
+                    .with(
+                            authentication(
+                                    getAuthentication(account)
+                            )
+                    ).contentType(MediaType.APPLICATION_JSON)
+                )
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(handler().handlerType(AlarmController.class))
+                    .andExpect(handler().methodName("alarmRemove"))
+                    .andExpect(jsonPath("$.result").value(true))
+                    .andExpect(jsonPath("$.message").value("약알림이 성공적으로 제거되었습니다."))
+                    .andExpect(jsonPath("$._links.self").isNotEmpty())
+                    .andExpect(jsonPath("$._links.profile").isNotEmpty())
+        ;
+            verify(alarmService).removeAlarm(any(Account.class), anyLong());
+        }
+
+        @Test
+        @DisplayName("[실패][DELETE] 알림을 이미 제거한 경우 - ALREADY_DELETED_ALARM")
+        public void givenAlarmId_whenAlarmRemove_thenAlarmException() throws Exception{
+            //given
+             AlarmErrorCode errorCode = AlarmErrorCode.ALREADY_DELETED_ALARM;
+            Account account = createAccount();
+            Long deletedAlarmId = 1L;
+            doThrow(new AlarmException(errorCode))
+                    .when(alarmService).removeAlarm(any(Account.class), anyLong());
+            //when //then
+            mvc.perform(delete("/api/v1/alarms/{alarmId}", deletedAlarmId)
+                            .with(
+                                    authentication(
+                                            getAuthentication(account)
+                                    )
+                            ).contentType(MediaType.APPLICATION_JSON)
+                    )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value(errorCode.toString()))
+                .andExpect(jsonPath("$.errorMessage").value(errorCode.getDescription()))
+            ;
+            verify(alarmService).removeAlarm(any(Account.class), anyLong());
+
         }
     }
 }

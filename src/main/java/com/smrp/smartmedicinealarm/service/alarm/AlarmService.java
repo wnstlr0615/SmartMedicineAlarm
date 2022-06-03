@@ -10,4 +10,7 @@ public interface AlarmService {
 
     /** 알람 상세 조회*/
     AlarmDetailDto findAlarmDetails(Account account, Long alarmId);
+
+    /** 알람 제거*/
+    void removeAlarm(Account account, Long alarmId);
 }

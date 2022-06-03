@@ -78,7 +78,7 @@ class AlarmServiceImplTest {
                     );
             when(alarmRepository.save(any(Alarm.class)))
                     .thenReturn(
-                            createAlarm(account, medicines)
+                            createAlarm(account, medicines, false, null)
                     )
             ;
 
@@ -145,7 +145,7 @@ class AlarmServiceImplTest {
             long alarmId = 1L;
             Account account = createAccount(1L, "joon@naver.com");
             List<Medicine> medicines = List.of(getMedicine());
-            Alarm alarm = createAlarm(account, medicines);
+            Alarm alarm = createAlarm(account, medicines, false, null);
 
             when(alarmRepository.findDetailsByAlarmId(anyLong()))
                     .thenReturn(
@@ -210,7 +210,7 @@ class AlarmServiceImplTest {
             Account otherAccount = createAccount(2L, "joon2@naver.com");
             long alarmId = 1L;
 
-            Alarm alarm = createAlarm(otherAccount, medicines);
+            Alarm alarm = createAlarm(otherAccount, medicines, false, null);
             when(alarmRepository.findDetailsByAlarmId(anyLong()))
                     .thenReturn(
                             Optional.of(
@@ -229,8 +229,71 @@ class AlarmServiceImplTest {
             verify(alarmRepository).findDetailsByAlarmId(anyLong());
         }
     }
-    private Alarm createAlarm(Account account, List<Medicine> medicines) {
-        Alarm alarm = Alarm.createAlarm(1L, "알람명", 6, account, null, false, null);
+
+    @Nested
+    @DisplayName("알림 제거하기")
+    class WhenRemoveAlarm{
+        @Test
+        @DisplayName("[성공] 알림 제거하기")
+        public void givenAlarmId_whenRemoveAlarm_thenNothing(){
+            //given
+            List<Medicine> medicines = List.of(getMedicine());
+            Account account = createAccount(1L, "joon1@naver.com");
+            long alarmId = 1L;
+            Alarm alarm = createAlarm(account, medicines, false, null);
+            boolean beforeDeleted = alarm.isDeleted();
+
+            when(alarmRepository.findDetailsByAlarmId(anyLong()))
+                    .thenReturn(
+                            Optional.of(
+                                    alarm
+                            )
+                    );
+            //when
+            alarmService.removeAlarm(account, alarmId);
+
+            //then
+            assertAll(
+                    () ->assertThat(beforeDeleted).isFalse(),
+                    () ->assertThat(alarm.isDeleted()).isTrue(),
+                    () ->assertThat(alarm.getDeletedAt()).isNotNull()
+            );
+            verify(alarmRepository).findDetailsByAlarmId(anyLong());
+
+        }
+
+        @Test
+        @DisplayName("[실패] 이미 제거된 알림 삭제 요청 ")
+        public void givenDeletedAlarmId_whenRemoveAlarm_thenAlarmException(){
+            //given
+            final AlarmErrorCode errorCode = AlarmErrorCode.ALREADY_DELETED_ALARM;
+            Account account = createAccount(1L, "joon1@naver.com");
+            long alarmId = 1L;
+            List<Medicine> medicines = List.of(getMedicine());
+            LocalDateTime deletedAt = LocalDateTime.of(2022,6,1,0,0);
+            Alarm alarm = createAlarm(account, medicines, true, deletedAt);
+
+            when(alarmRepository.findDetailsByAlarmId(anyLong()))
+                    .thenReturn(
+                            Optional.of(
+                                    alarm
+                            )
+                    );
+            //when
+            final AlarmException exception = assertThrows(AlarmException.class,
+                () -> alarmService.removeAlarm(account, alarmId)
+            );
+            //then
+            assertAll(
+                () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+                () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+            );
+            verify(alarmRepository).findDetailsByAlarmId(anyLong());
+
+        }
+    }
+    private Alarm createAlarm(Account account, List<Medicine> medicines, boolean deleted, LocalDateTime deletedAt) {
+        Alarm alarm = Alarm.createAlarm(1L, "알람명", 6, account, null, deleted, deletedAt);
         List<MedicineAlarm> medicineAlarms = medicines.stream().map(medicine -> MedicineAlarm.createMedicineAlarm(alarm, medicine)).toList();
         alarm.setCreateDate(LocalDateTime.of(2022 , 6, 1, 0,0));
         for (MedicineAlarm medicineAlarm : medicineAlarms) {
