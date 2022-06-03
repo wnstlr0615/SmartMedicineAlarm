@@ -2,6 +2,7 @@ package com.smrp.smartmedicinealarm.service.alarm;
 
 import com.smrp.smartmedicinealarm.dto.Alarm;
 import com.smrp.smartmedicinealarm.dto.MedicineAlarm;
+import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
@@ -24,7 +25,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto.Request.createNewAlarmRequestDto;
 import static com.smrp.smartmedicinealarm.entity.medicine.Medicine.createMedicine;
@@ -64,7 +67,7 @@ class AlarmServiceImplTest {
             //given
             String title = "알람명";
             int doseCount = 6;
-            Account account = createAccount();
+            Account account = createAccount(1L, "joon@naver.com");
             NewAlarmDto.Request requestDto = createNewAlarmRequestDto(title, doseCount, List.of(1L));
 
             List<Medicine> medicines = List.of(getMedicine());
@@ -103,14 +106,7 @@ class AlarmServiceImplTest {
             verify(alarmRepository).save(any(Alarm.class));
         }
 
-        private Alarm createAlarm(Account account, List<Medicine> medicines) {
-            Alarm alarm = Alarm.createAlarm(1L, "알람명", 6, account, null, false, null);
-            List<MedicineAlarm> medicineAlarms = medicines.stream().map(medicine -> MedicineAlarm.createMedicineAlarm(alarm, medicine)).toList();
-            for (MedicineAlarm medicineAlarm : medicineAlarms) {
-                alarm.addMedicineAlarm(medicineAlarm);
-            }
-            return alarm;
-        }
+
         @Test
         @DisplayName("약품 을 하나도 찾지 못한 경우 - FOUND_MEDICINES_SIZE_IS_ZERO")
         public void givenWrongMedicineIds_whenAddAlarm_themAlarmException(){
@@ -118,7 +114,7 @@ class AlarmServiceImplTest {
             final AlarmErrorCode errorCode = AlarmErrorCode.FOUND_MEDICINES_SIZE_IS_ZERO;
             String title = "알람명";
             int doseCount = 6;
-            Account account = createAccount();
+            Account account = createAccount(1L, "joon@naver.com");
             List<Long> wrongMedicineIds = List.of(999999L);
             NewAlarmDto.Request requestDto = createNewAlarmRequestDto(title, doseCount, wrongMedicineIds);
 
@@ -139,9 +135,112 @@ class AlarmServiceImplTest {
         }
     }
 
+    @Nested
+    @DisplayName("알림 상세 정보 조회")
+    class WhenFindAlarmDetails{
+        @Test
+        @DisplayName("[성공] 알림 상세 정보 조회")
+        public void givenAlarmId_whenFindAlarmDetails_thenReturnAlarmDetailDto(){
+            //given
+            long alarmId = 1L;
+            Account account = createAccount(1L, "joon@naver.com");
+            List<Medicine> medicines = List.of(getMedicine());
+            Alarm alarm = createAlarm(account, medicines);
 
-    protected Account createAccount() {
-        return Account.createAccount(1L, "joon@naver.com", "asdasdasd", "joon", Gender.MAN, AccountStatus.USE, Role.NORMAL);
+            when(alarmRepository.findDetailsByAlarmId(anyLong()))
+                    .thenReturn(
+                            Optional.of(
+                                    alarm
+                            )
+                    );
+            //when
+            AlarmDetailDto alarmDetails = alarmService.findAlarmDetails(account, alarmId);
+            assertAll(
+                    () ->  assertThat(alarmDetails)
+                            .hasFieldOrPropertyWithValue("alarmId",alarm.getAlarmId())
+                            .hasFieldOrPropertyWithValue("title", alarm.getTitle())
+                            .hasFieldOrPropertyWithValue("doseCount", alarm.getDoseCount())
+                            .hasFieldOrPropertyWithValue("email", alarm.getAccount().getEmail())
+                            .hasFieldOrProperty("medicines")
+                            .hasFieldOrProperty("createdAt"),
+                    () -> assertThat(alarmDetails.getMedicines()).allSatisfy(simpleMedicineDto -> {
+                                assertThat(simpleMedicineDto.getMedicineId()).isEqualTo(1L);
+                                assertThat(simpleMedicineDto.getItemSeq()).isEqualTo(200611524L);
+                                assertThat(simpleMedicineDto.getItemName()).isEqualTo("마도파정");
+                                assertThat(simpleMedicineDto.getItemImage()).isEqualTo("https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/148609543321800149");
+                                assertThat(simpleMedicineDto.getEtcOtcName()).isEqualTo("전문의약품");
+                                assertThat(simpleMedicineDto.getEntpName()).isEqualTo("(주)한국로슈");
+                            }
+                    )
+            );
+            //then
+            verify(alarmRepository).findDetailsByAlarmId(anyLong());
+        }
+        @Test
+        @DisplayName("[실패] 존재 하지 않는 알림 id 조회 - NOF_FOUND_ALARM_ID")
+        public void givenWrongAlarmId_whenFindAlarmDetails_thenAlarmException(){
+            //given
+            Account account = createAccount(1L, "joon@naver.com");
+            long wrongAlarmId = 999999999L;
+            final AlarmErrorCode errorCode = AlarmErrorCode.NOF_FOUND_ALARM_ID;
+
+            when(alarmRepository.findDetailsByAlarmId(anyLong()))
+                    .thenReturn(
+                            Optional.empty()
+                    );
+            //when
+            final AlarmException exception = assertThrows(AlarmException.class,
+                () ->     alarmService.findAlarmDetails(account, wrongAlarmId)
+            );
+            //then
+            assertAll(
+                () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+                () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+            );
+            verify(alarmRepository).findDetailsByAlarmId(anyLong());
+        }
+
+        @Test
+        @DisplayName("[실패] 다른 유저의 알림 id 조회 - ACCESS_DENIED_ALARM")
+        public void giveOtherUserAlarmId_whenFindAlarmDetails_thenAlarmException(){
+            //given
+            final AlarmErrorCode errorCode = AlarmErrorCode.ACCESS_DENIED_ALARM;
+            List<Medicine> medicines = List.of(getMedicine());
+            Account account = createAccount(1L, "joon1@naver.com");
+            Account otherAccount = createAccount(2L, "joon2@naver.com");
+            long alarmId = 1L;
+
+            Alarm alarm = createAlarm(otherAccount, medicines);
+            when(alarmRepository.findDetailsByAlarmId(anyLong()))
+                    .thenReturn(
+                            Optional.of(
+                                    alarm
+                            )
+                    );
+            //when
+            final AlarmException exception = assertThrows(AlarmException.class,
+                    () ->     alarmService.findAlarmDetails(account, alarmId)
+            );
+            //then
+            assertAll(
+                    () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+                    () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+            );
+            verify(alarmRepository).findDetailsByAlarmId(anyLong());
+        }
+    }
+    private Alarm createAlarm(Account account, List<Medicine> medicines) {
+        Alarm alarm = Alarm.createAlarm(1L, "알람명", 6, account, null, false, null);
+        List<MedicineAlarm> medicineAlarms = medicines.stream().map(medicine -> MedicineAlarm.createMedicineAlarm(alarm, medicine)).toList();
+        alarm.setCreateDate(LocalDateTime.of(2022 , 6, 1, 0,0));
+        for (MedicineAlarm medicineAlarm : medicineAlarms) {
+            alarm.addMedicineAlarm(medicineAlarm);
+        }
+        return alarm;
+    }
+
+    protected Account createAccount(long accountId, String email) {
+        return Account.createAccount(accountId, email, "asdasdasd", "joon", Gender.MAN, AccountStatus.USE, Role.NORMAL);
     }
     private Medicine getMedicine() {
         Long itemSeq = 200611524L;

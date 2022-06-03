@@ -63,6 +63,7 @@ public class NewAlarmDto {
         @ApiModelProperty(value = "사용자 이메일 정보", example = "joon@naver.com")
         private String email;
 
+        @ApiModelProperty(value = "등록된 약 정보들", dataType = "List")
         private List<SimpleMedicineDto> medicines;
 
         //== 생성 메서드 ==//

@@ -66,7 +66,7 @@ public class Alarm extends BaseTimeEntity {
         return alarm;
     }
 
-    //== 비즈니스 메서드 ==//
+    //== 관계 메서드 ==//
     public void addMedicineAlarm(MedicineAlarm medicineAlarm) {
         if(medicineAlarms == null){
             medicineAlarms = new ArrayList<>();

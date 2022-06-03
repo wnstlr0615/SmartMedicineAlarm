@@ -36,7 +36,8 @@ public class MedicineAlarm extends BaseTimeEntity {
     public static MedicineAlarm createMedicineAlarm(Alarm alarm,  Medicine medicine) {
         return MedicineAlarm.createMedicineAlarm(null, alarm, medicine);
     }
-
+    
+    //== 관계 메서드 ==//
     public void setAlarm(Alarm alarm) {
         if(alarm.getMedicineAlarms() != null){
             alarm.getMedicineAlarms().remove(this);

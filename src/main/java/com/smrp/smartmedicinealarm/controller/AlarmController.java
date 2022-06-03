@@ -1,5 +1,6 @@
 package com.smrp.smartmedicinealarm.controller;
 
+import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.service.alarm.AlarmService;
@@ -34,7 +35,7 @@ public class AlarmController {
         return ResponseEntity.created(
                 linkTo(
                         methodOn(AlarmController.class)
-                                .medicineDetails(account, response.getAlarmId()))
+                                .alarmDetails(account, response.getAlarmId()))
                         .toUri())
                 .body(response);
     }
@@ -49,12 +50,25 @@ public class AlarmController {
     @GetMapping("/{alarmId}")
     @PreAuthorize("isAuthenticated()")
     @ApiOperation(value = "약 알림 추가")
-    public ResponseEntity<?> medicineDetails(
+    public ResponseEntity<?> alarmDetails(
             @AuthenticationPrincipal Account account,
             @ApiParam(value = "알람 PK", example = "1L")
             @PathVariable Long alarmId
     ) {
-        return ResponseEntity.ok(null);
+        AlarmDetailDto alarmDetailDto = alarmService.findAlarmDetails(account, alarmId);
+        alarmDetailsLinkAdd(account, alarmId, alarmDetailDto);
+        return ResponseEntity.ok(alarmDetailDto);
+    }
+
+    private void alarmDetailsLinkAdd(Account account, Long alarmId, AlarmDetailDto alarmDetailDto) {
+        alarmDetailDto.add(
+                linkTo(methodOn(AlarmController.class).alarmDetails(account, alarmId)).withSelfRel(),
+                Link.of(linkTo(SwaggerController.class) + "/#/alarm-controller/alarmDetailsGET").withRel("profile")
+        );
+        alarmDetailDto.getMedicines().forEach(simpleMedicineDto ->
+                simpleMedicineDto.add(
+                        linkTo(methodOn(MedicineController.class).medicineDetails(simpleMedicineDto.getMedicineId())).withSelfRel()
+                ));
     }
 
 }

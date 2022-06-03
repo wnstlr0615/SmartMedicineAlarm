@@ -1,6 +1,7 @@
 package com.smrp.smartmedicinealarm.service.alarm;
 
 import com.smrp.smartmedicinealarm.dto.Alarm;
+import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
@@ -28,11 +29,40 @@ public class AlarmServiceImpl implements AlarmService{
     @Override
     @Transactional
     public NewAlarmDto.Response addAlarm(Account account, NewAlarmDto.Request request) {
+        // 약 목록 조회
         List<Medicine> medicines = getMedicinesByIdIn(request);
 
+        //알람 생성
         Alarm alarm = createAlarm(account, request, medicines);
+
+        // 알람 저장
         Alarm saveAlarm = alarmRepository.save(alarm);
+
+        //DTO로 변환
         return NewAlarmDto.Response.fromEntity(saveAlarm);
+    }
+
+    @Override
+    public AlarmDetailDto findAlarmDetails(Account account, Long alarmId) {
+        // 알람 조회
+        Alarm alarm = getAlarmById(alarmId);
+
+        // 알람 사용자 접근 검증
+        validAlarmAccessAble(alarm, account);
+
+        // DTO로 변환
+        return AlarmDetailDto.fromEntity(alarm);
+    }
+
+    private void validAlarmAccessAble(Alarm alarm, Account account) {
+        if(!alarm.getAccount().getAccountId().equals(account.getAccountId())){
+            throw new AlarmException(AlarmErrorCode.ACCESS_DENIED_ALARM);
+        }
+    }
+
+    private Alarm getAlarmById(Long alarmId) {
+        return alarmRepository.findDetailsByAlarmId(alarmId)
+                .orElseThrow(() -> new AlarmException(AlarmErrorCode.NOF_FOUND_ALARM_ID));
     }
 
     private List<Medicine> getMedicinesByIdIn(NewAlarmDto.Request request) {
@@ -45,7 +75,6 @@ public class AlarmServiceImpl implements AlarmService{
     }
 
     private Alarm createAlarm(Account account, NewAlarmDto.Request request, List<Medicine> medicines) {
-
         return Alarm.createAlarm(request.getTitle(), request.getDoseCount(), account, medicines);
     }
 }
