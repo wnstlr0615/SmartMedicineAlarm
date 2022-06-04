@@ -50,7 +50,7 @@ class BookmarkServiceImplTest {
     @Mock
     AccountRepository accountRepository;
     @Mock
-    BookmarkRepository bookmarkRepository;;
+    BookmarkRepository bookmarkRepository;
     @InjectMocks
     BookmarkServiceImpl bookmarkService;
 
@@ -200,7 +200,7 @@ class BookmarkServiceImplTest {
             doNothing()
                     .when(bookmarkRepository).deleteAllInBatch(any());
             //when
-            SimpleBookmarkDto simpleBookmarkDto = bookmarkService.bookmarkRemove(account, RemoveBookmarkDto.createRemoveBookmarkDto(List.of(1L)));
+            SimpleBookmarkDto simpleBookmarkDto = bookmarkService.removeBookmark(account, RemoveBookmarkDto.createRemoveBookmarkDto(List.of(1L)));
 
             //then
             assertAll(

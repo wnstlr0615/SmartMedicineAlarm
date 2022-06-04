@@ -97,7 +97,7 @@ public class BookmarkServiceImpl implements BookmarkService{
 
     @Override
     @Transactional
-    public SimpleBookmarkDto bookmarkRemove(Account account, RemoveBookmarkDto removeBookmarkDto) {
+    public SimpleBookmarkDto removeBookmark(Account account, RemoveBookmarkDto removeBookmarkDto) {
         // 사용자 상세 조회
         Account accountEntity = getDetailAccountById(account.getAccountId());
 

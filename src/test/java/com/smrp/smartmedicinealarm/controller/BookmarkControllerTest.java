@@ -6,9 +6,6 @@ import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
-import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
-import com.smrp.smartmedicinealarm.entity.account.Gender;
-import com.smrp.smartmedicinealarm.entity.account.Role;
 import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
@@ -22,8 +19,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -215,11 +210,24 @@ class BookmarkControllerTest extends BaseControllerTest{
         @DisplayName("[성공][DELETE] 즐겨찾기 목록에서 약 제거하기")
         public void givenRemoveMedicineIds_whenBookmarkRemove_thenSuccess() throws Exception{
             //given
-            List<Long> removeBookmarkList = List.of(1L, 2L, 3L);
+            List<Long> removeBookmarkList = List.of(2L, 3L);
+            Account account = createAccount();
+            Medicine medicine = getMedicine();
+            List<SimpleMedicineDto> medicines = List.of(
+                    SimpleMedicineDto.fromEntity(medicine)
+            );
+            when(bookmarkService.removeBookmark(any(Account.class), any(RemoveBookmarkDto.class)))
+                    .thenReturn(
+                            SimpleBookmarkDto.createSimpleBookmarkDto(account.getAccountId(), account.getEmail(), medicines)
+                    );
 
             //when //then
-            mvc.perform(delete("/api/v1/accounts/me/medicines")
+            mvc.perform(delete("/api/v1/accounts/me/bookmarks")
                 .contentType(MediaType.APPLICATION_JSON)
+                            .with(authentication(
+                                            getAuthentication(account)
+                                )
+                            )
                 .content(
                         mapper.writeValueAsString(
                                 RemoveBookmarkDto.createRemoveBookmarkDto(removeBookmarkList)
@@ -228,10 +236,19 @@ class BookmarkControllerTest extends BaseControllerTest{
             )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._links.self").isNotEmpty())
-                .andExpect(jsonPath("$._links.profile").isNotEmpty())
+                .andExpect(handler().methodName("bookmarkRemove"))
+                .andExpect(handler().handlerType(BookmarkController.class))
+                .andExpect(jsonPath("$.accountId").value(account.getAccountId()))
+                .andExpect(jsonPath("$.email").value(account.getEmail()))
+                .andExpect(jsonPath("$.medicines[0].medicineId").exists())
+                .andExpect(jsonPath("$.medicines[0].itemSeq").exists())
+                .andExpect(jsonPath("$.medicines[0].itemName").exists())
+                .andExpect(jsonPath("$.medicines[0].itemImage").exists())
+                .andExpect(jsonPath("$.medicines[0].etcOtcName").exists())
+                .andExpect(jsonPath("$.medicines[0].entpName").exists())
+                .andExpect(jsonPath("$.medicines[0]._links.self.href").exists())
             ;
-            verify(bookmarkService).bookmarkRemove(any(Account.class), any(RemoveBookmarkDto.class));
+            verify(bookmarkService).removeBookmark(any(Account.class), any(RemoveBookmarkDto.class));
         }
     }
 
@@ -251,18 +268,6 @@ class BookmarkControllerTest extends BaseControllerTest{
         MedicineDate medicineDate = createMedicineDate(LocalDate.parse("2006-11-27"), LocalDate.parse("2004-12-22"), LocalDate.parse("2020-02-27"));
         return Medicine.createMedicine(1L, itemSeq, itemName, itemImage, etcOtcName, classNoAndName, lengAndThick,
                         medicineCompany, medicineIdentification, medicineLine, medicineColor, markCode, medicineDate);
-    }
-    private UsernamePasswordAuthenticationToken getAuthentication(Account account) {
-        return new UsernamePasswordAuthenticationToken(
-                account,
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_NORMAL")
-                )
-        );
-    }
-
-    private Account createAccount() {
-        return Account.createAccount(1L, "joon@naver.com", "asdasdasd", "joon", Gender.MAN, AccountStatus.USE, Role.NORMAL);
     }
 
     private List<SimpleMedicineDto> getSimpleMedicineDtos(){
