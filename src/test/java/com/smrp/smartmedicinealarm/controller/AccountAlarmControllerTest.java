@@ -18,8 +18,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers =AccountAlarmController.class)
 class AccountAlarmControllerTest extends BaseControllerTest{
@@ -49,12 +48,14 @@ class AccountAlarmControllerTest extends BaseControllerTest{
         )
             .andDo(print())
             .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.items[0].alarmId").exists())
-                .andExpect(jsonPath("$._embedded.items[0].title").exists())
-                .andExpect(jsonPath("$._embedded.items[0].used").exists())
-                .andExpect(jsonPath("$._embedded.items[0].createdAt").exists())
-                .andExpect(jsonPath("$._embedded.items[0]._links.self.href").exists())
-                .andExpect(jsonPath("$._links.self").isNotEmpty())
+            .andExpect(handler().handlerType(AccountAlarmController.class))
+            .andExpect(handler().methodName("findAllAlarm"))
+            .andExpect(jsonPath("$._embedded.items[0].alarmId").exists())
+            .andExpect(jsonPath("$._embedded.items[0].title").exists())
+            .andExpect(jsonPath("$._embedded.items[0].used").exists())
+            .andExpect(jsonPath("$._embedded.items[0].createdAt").exists())
+            .andExpect(jsonPath("$._embedded.items[0]._links.self.href").exists())
+            .andExpect(jsonPath("$._links.self").isNotEmpty())
             .andExpect(jsonPath("$._links.profile").isNotEmpty())
         ;
         verify(accountAlarmService).findAllAlarm(any(Account.class));

@@ -64,7 +64,7 @@ public class BookmarkController {
             @AuthenticationPrincipal Account account,
             @Valid  @RequestBody RemoveBookmarkDto removeBookmarkDto
     ) {
-        SimpleBookmarkDto simpleBookmarkDto =  bookmarkService.bookmarkRemove(account, removeBookmarkDto);
+        SimpleBookmarkDto simpleBookmarkDto =  bookmarkService.removeBookmark(account, removeBookmarkDto);
         bookmarkRemoveAddLink(account, removeBookmarkDto, simpleBookmarkDto);
         return ResponseEntity.ok(simpleBookmarkDto);
     }

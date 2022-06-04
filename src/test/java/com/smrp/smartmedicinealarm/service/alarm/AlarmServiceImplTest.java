@@ -263,10 +263,10 @@ class AlarmServiceImplTest {
         }
 
         @Test
-        @DisplayName("[실패] 이미 제거된 알림 삭제 요청 ")
+        @DisplayName("[실패] 이미 제거된 알림 삭제 요청 - NOF_FOUND_ALARM_ID")
         public void givenDeletedAlarmId_whenRemoveAlarm_thenAlarmException(){
             //given
-            final AlarmErrorCode errorCode = AlarmErrorCode.ALREADY_DELETED_ALARM;
+            final AlarmErrorCode errorCode = AlarmErrorCode.NOF_FOUND_ALARM_ID;
             Account account = createAccount(1L, "joon1@naver.com");
             long alarmId = 1L;
             List<Medicine> medicines = List.of(getMedicine());
