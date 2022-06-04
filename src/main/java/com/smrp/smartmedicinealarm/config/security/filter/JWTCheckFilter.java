@@ -143,6 +143,7 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 
     private boolean isNotValidateRefreshToken(String username, String refreshToken) {
         String findRefreshToken = refreshTokenService.getToken(username);
+        log.info("username : {}, refreshToken : {}, findRefreshToken{}", username, refreshToken, findRefreshToken);
         return findRefreshToken == null || !findRefreshToken.equals(refreshToken);
     }
 

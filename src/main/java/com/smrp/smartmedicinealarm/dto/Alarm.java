@@ -25,6 +25,9 @@ public class Alarm extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer doseCount;
 
+    @Column(nullable = false)
+    private Integer leftOverDoseCount;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false, updatable = false)
     private Account account;
@@ -42,6 +45,7 @@ public class Alarm extends BaseTimeEntity {
                 .alarmId(alarmId)
                 .title(title)
                 .doseCount(doseCount)
+                .leftOverDoseCount(doseCount)
                 .account(account)
                 .medicineAlarms(medicineAlarms)
                 .deleted(deleted)
@@ -52,7 +56,10 @@ public class Alarm extends BaseTimeEntity {
         Alarm alarm = Alarm.builder()
                 .title(title)
                 .doseCount(doseCount)
+                .leftOverDoseCount(doseCount)
                 .account(account)
+                .deleted(false)
+                .deletedAt(null)
                 .build();
 
         List<MedicineAlarm> medicineAlarms = medicines.stream()
@@ -88,6 +95,7 @@ public class Alarm extends BaseTimeEntity {
     public void update(String title, Integer doseCount, List<Medicine> medicines) {
         this.title = title;
         this.doseCount = doseCount;
+        this.leftOverDoseCount = doseCount;
         List<MedicineAlarm> medicineAlarms = medicines.stream()
                 .map(medicine -> MedicineAlarm.createMedicineAlarm(this, medicine)).toList();
         this.medicineAlarms.clear();

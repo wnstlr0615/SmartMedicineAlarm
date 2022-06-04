@@ -102,8 +102,12 @@ public class AlarmServiceImpl implements AlarmService{
     }
 
     private Alarm getAlarmById(Long alarmId) {
-        return alarmRepository.findDetailsByAlarmId(alarmId)
+        Alarm alarm = alarmRepository.findDetailsByAlarmId(alarmId)
                 .orElseThrow(() -> new AlarmException(AlarmErrorCode.NOF_FOUND_ALARM_ID));
+        if(alarm.isDeleted()){
+            throw new AlarmException(AlarmErrorCode.NOF_FOUND_ALARM_ID);
+        }
+        return alarm;
     }
 
     private List<Medicine> getMedicinesByIdIn(List<Long> medicineIds) {

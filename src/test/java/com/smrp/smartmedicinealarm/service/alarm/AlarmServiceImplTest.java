@@ -13,7 +13,6 @@ import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import com.smrp.smartmedicinealarm.error.code.AlarmErrorCode;
 import com.smrp.smartmedicinealarm.error.exception.AlarmException;
-import com.smrp.smartmedicinealarm.repository.AccountRepository;
 import com.smrp.smartmedicinealarm.repository.alarm.AlarmRepository;
 import com.smrp.smartmedicinealarm.repository.medicine.MedicineRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -51,8 +50,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 class AlarmServiceImplTest {
-    @Mock
-    AccountRepository accountRepository;
     @Mock
     AlarmRepository alarmRepository;
     @Mock
@@ -162,6 +159,7 @@ class AlarmServiceImplTest {
                             .hasFieldOrPropertyWithValue("alarmId",alarm.getAlarmId())
                             .hasFieldOrPropertyWithValue("title", alarm.getTitle())
                             .hasFieldOrPropertyWithValue("doseCount", alarm.getDoseCount())
+                            .hasFieldOrPropertyWithValue("leftOverDoseCount", alarm.getLeftOverDoseCount())
                             .hasFieldOrPropertyWithValue("email", alarm.getAccount().getEmail())
                             .hasFieldOrProperty("medicines")
                             .hasFieldOrProperty("createdAt"),

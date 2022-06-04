@@ -123,6 +123,7 @@ class AlarmControllerTest extends BaseControllerTest {
             long alarmId = 1L;
             String title = "알람명";
             int doseCount = 6;
+            int leftOverDoseCount = 6;
             Account account = createAccount();
             List<SimpleMedicineDto> medicines = List.of(
                     createSimpleMedicineDto(1L, 200502447L, "쿨정", "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1Mxwka5v0jL", "일반의약품", "알파제약(주)"),
@@ -130,7 +131,7 @@ class AlarmControllerTest extends BaseControllerTest {
             );
             when(alarmService.findAlarmDetails(any(Account.class), anyLong()))
                     .thenReturn(
-                            AlarmDetailDto.createAlarmDetailDto(alarmId, title, doseCount, account.getEmail(), medicines, LocalDate.of(2022,6,1))
+                            AlarmDetailDto.createAlarmDetailDto(alarmId, title, doseCount, leftOverDoseCount, account.getEmail(), medicines, LocalDate.of(2022,6,1))
                     );
 
             //when //then
@@ -149,6 +150,7 @@ class AlarmControllerTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.alarmId").value(alarmId))
                 .andExpect(jsonPath("$.title").value(title))
                 .andExpect(jsonPath("$.doseCount").value(doseCount))
+                .andExpect(jsonPath("$.leftOverDoseCount").value(doseCount))
                 .andExpect(jsonPath("$.email").value(account.getEmail()))
                 .andExpect(jsonPath("$.medicines").isNotEmpty())
                 .andExpect(jsonPath("$.medicines[0].medicineId").isNotEmpty())
@@ -283,6 +285,7 @@ class AlarmControllerTest extends BaseControllerTest {
             long alarmId = 1L;
             String title = "알람명";
             int doseCount = 6;
+            int leftOverDoseCount = 6;
             Account account = createAccount();
             List<SimpleMedicineDto> medicines = List.of(
                     createSimpleMedicineDto(1L, 200502447L, "쿨정", "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1Mxwka5v0jL", "일반의약품", "알파제약(주)"),
@@ -290,7 +293,7 @@ class AlarmControllerTest extends BaseControllerTest {
             );
             when(alarmService.modifyAlarm(anyLong(),any(Account.class), any(UpdateAlarmDto.class)))
                     .thenReturn(
-                            AlarmDetailDto.createAlarmDetailDto(alarmId, title, doseCount, account.getEmail(), medicines, LocalDate.of(2022,6,1))
+                            AlarmDetailDto.createAlarmDetailDto(alarmId, title, doseCount,leftOverDoseCount, account.getEmail(), medicines, LocalDate.of(2022,6,1))
                     );
 
             //when //then
@@ -308,6 +311,7 @@ class AlarmControllerTest extends BaseControllerTest {
                     .andExpect(jsonPath("$.alarmId").value(1L))
                     .andExpect(jsonPath("$.title").value(title))
                     .andExpect(jsonPath("$.doseCount").value(doseCount))
+                    .andExpect(jsonPath("$.leftOverDoseCount").value(doseCount))
                     .andExpect(jsonPath("$.medicines[0].medicineId").exists())
                     .andExpect(jsonPath("$.medicines[0].itemSeq").exists())
                     .andExpect(jsonPath("$.medicines[0].itemName").exists())

@@ -26,6 +26,9 @@ public class AlarmDetailDto extends RepresentationModel<AlarmDetailDto> {
     @ApiModelProperty(value = "약 복용 횟수", example = "9")
     private Integer doseCount;
 
+    @ApiModelProperty(value = "남은 약 복용 횟수", example = "9")
+    private Integer leftOverDoseCount;
+
     @ApiModelProperty(value = "사용자 이메일 정보", example = "joon@naver.com")
     private String email;
 
@@ -37,10 +40,11 @@ public class AlarmDetailDto extends RepresentationModel<AlarmDetailDto> {
 
 
 
-    public static AlarmDetailDto createAlarmDetailDto(Long alarmId, String title, Integer doseCount, String email, List<SimpleMedicineDto> medicines, LocalDate createAt) {
+    public static AlarmDetailDto createAlarmDetailDto(Long alarmId, String title, Integer doseCount, Integer leftOverDoseCount,String email, List<SimpleMedicineDto> medicines, LocalDate createAt) {
         Assert.notNull(alarmId, "alarmId must not be null");
         Assert.hasText(title, "title must not be null");
         Assert.notNull(doseCount, "doseCount must not be null");
+        Assert.notNull(leftOverDoseCount, "doseCount must not be null");
         Assert.hasText(email, "email must not be null");
         Assert.notEmpty(medicines, "medicines must not be null");
         Assert.notNull(createAt, "createAt must not be null");
@@ -49,6 +53,7 @@ public class AlarmDetailDto extends RepresentationModel<AlarmDetailDto> {
                 .alarmId(alarmId)
                 .title(title)
                 .doseCount(doseCount)
+                .leftOverDoseCount(leftOverDoseCount)
                 .email(email)
                 .medicines(medicines)
                 .createdAt(createAt)
@@ -61,8 +66,9 @@ public class AlarmDetailDto extends RepresentationModel<AlarmDetailDto> {
         Long alarmId = alarm.getAlarmId();
         String title = alarm.getTitle();
         Integer doseCount = alarm.getDoseCount();
+        Integer leftOverDoseCount = alarm.getLeftOverDoseCount();
         String email = alarm.getAccount().getEmail();
         LocalDate createAt = alarm.getCreateDate().toLocalDate();
-        return createAlarmDetailDto(alarmId, title, doseCount, email, simpleMedicineDtos, createAt);
+        return createAlarmDetailDto(alarmId, title, doseCount,leftOverDoseCount, email, simpleMedicineDtos, createAt);
     }
 }
