@@ -84,4 +84,15 @@ public class Alarm extends BaseTimeEntity {
             this.deletedAt =LocalDateTime.now();
         }
     }
+
+    public void update(String title, Integer doseCount, List<Medicine> medicines) {
+        this.title = title;
+        this.doseCount = doseCount;
+        List<MedicineAlarm> medicineAlarms = medicines.stream()
+                .map(medicine -> MedicineAlarm.createMedicineAlarm(this, medicine)).toList();
+        this.medicineAlarms.clear();
+        for (MedicineAlarm medicineAlarm : medicineAlarms) {
+            addMedicineAlarm(medicineAlarm);
+        }
+    }
 }

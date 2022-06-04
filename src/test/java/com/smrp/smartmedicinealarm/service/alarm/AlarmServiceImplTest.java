@@ -4,6 +4,7 @@ import com.smrp.smartmedicinealarm.dto.Alarm;
 import com.smrp.smartmedicinealarm.dto.MedicineAlarm;
 import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
+import com.smrp.smartmedicinealarm.dto.alarm.UpdateAlarmDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.account.AccountStatus;
 import com.smrp.smartmedicinealarm.entity.account.Gender;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto.Request.createNewAlarmRequestDto;
+import static com.smrp.smartmedicinealarm.dto.alarm.UpdateAlarmDto.createUpdateAlarmDto;
 import static com.smrp.smartmedicinealarm.entity.medicine.Medicine.createMedicine;
 import static com.smrp.smartmedicinealarm.entity.medicine.embedded.ClassNoAndName.createClassNoAndName;
 import static com.smrp.smartmedicinealarm.entity.medicine.embedded.LengAndThick.createLengAndThick;
@@ -69,8 +71,8 @@ class AlarmServiceImplTest {
             int doseCount = 6;
             Account account = createAccount(1L, "joon@naver.com");
             NewAlarmDto.Request requestDto = createNewAlarmRequestDto(title, doseCount, List.of(1L));
-
             List<Medicine> medicines = List.of(getMedicine());
+            Alarm alarm = createAlarm("알람명", 6, account, medicines, false, null);
 
             when(medicineRepository.findAllByMedicineIdIn(anyList()))
                     .thenReturn(
@@ -78,7 +80,7 @@ class AlarmServiceImplTest {
                     );
             when(alarmRepository.save(any(Alarm.class)))
                     .thenReturn(
-                            createAlarm(account, medicines, false, null)
+                            alarm
                     )
             ;
 
@@ -87,7 +89,7 @@ class AlarmServiceImplTest {
             //then
             assertAll(
                     () ->  assertThat(response)
-                            .hasFieldOrPropertyWithValue("alarmId",account.getAccountId())
+                            .hasFieldOrPropertyWithValue("alarmId",alarm.getAlarmId())
                             .hasFieldOrPropertyWithValue("title", title)
                             .hasFieldOrPropertyWithValue("doseCount", doseCount)
                             .hasFieldOrPropertyWithValue("email", account.getEmail())
@@ -145,7 +147,7 @@ class AlarmServiceImplTest {
             long alarmId = 1L;
             Account account = createAccount(1L, "joon@naver.com");
             List<Medicine> medicines = List.of(getMedicine());
-            Alarm alarm = createAlarm(account, medicines, false, null);
+            Alarm alarm = createAlarm("알람명", 6, account, medicines, false, null);
 
             when(alarmRepository.findDetailsByAlarmId(anyLong()))
                     .thenReturn(
@@ -210,7 +212,7 @@ class AlarmServiceImplTest {
             Account otherAccount = createAccount(2L, "joon2@naver.com");
             long alarmId = 1L;
 
-            Alarm alarm = createAlarm(otherAccount, medicines, false, null);
+            Alarm alarm = createAlarm("알람명", 6, otherAccount, medicines, false, null);
             when(alarmRepository.findDetailsByAlarmId(anyLong()))
                     .thenReturn(
                             Optional.of(
@@ -240,7 +242,7 @@ class AlarmServiceImplTest {
             List<Medicine> medicines = List.of(getMedicine());
             Account account = createAccount(1L, "joon1@naver.com");
             long alarmId = 1L;
-            Alarm alarm = createAlarm(account, medicines, false, null);
+            Alarm alarm = createAlarm("알람명", 6, account, medicines, false, null);
             boolean beforeDeleted = alarm.isDeleted();
 
             when(alarmRepository.findDetailsByAlarmId(anyLong()))
@@ -271,7 +273,7 @@ class AlarmServiceImplTest {
             long alarmId = 1L;
             List<Medicine> medicines = List.of(getMedicine());
             LocalDateTime deletedAt = LocalDateTime.of(2022,6,1,0,0);
-            Alarm alarm = createAlarm(account, medicines, true, deletedAt);
+            Alarm alarm = createAlarm("알람명", 6, account, medicines, true, deletedAt);
 
             when(alarmRepository.findDetailsByAlarmId(anyLong()))
                     .thenReturn(
@@ -292,8 +294,82 @@ class AlarmServiceImplTest {
 
         }
     }
-    private Alarm createAlarm(Account account, List<Medicine> medicines, boolean deleted, LocalDateTime deletedAt) {
-        Alarm alarm = Alarm.createAlarm(1L, "알람명", 6, account, null, deleted, deletedAt);
+    @Nested
+    @DisplayName("알람 수정하기")
+    class WhenModifyAlarm{
+        @Test
+        @DisplayName("[성공] 알람 수정하기")
+        public void givenAlarmIdAndUpdateAlarmDto_whenModifyAlarm_thenReturnAlarmDetail(){
+            String updateTitle = "수정된 알람명";
+            int updateDoseCount = 10;
+            Account account = createAccount(1L, "joon@naver.com");
+            UpdateAlarmDto updateAlarmDto = createUpdateAlarmDto(updateTitle, updateDoseCount, List.of(1L));
+
+            List<Medicine> medicines = List.of(getMedicine());
+            Alarm alarm = createAlarm("알람명", 6, account, medicines, false, null);
+
+            when(medicineRepository.findAllByMedicineIdIn(anyList()))
+                    .thenReturn(medicines);
+            when(alarmRepository.findDetailsByAlarmId(anyLong()))
+                    .thenReturn(Optional.of(alarm));
+
+            //when
+
+            AlarmDetailDto alarmDetailDto = alarmService.modifyAlarm(1L, account, updateAlarmDto);
+            //then
+            assertAll(
+                    () ->  assertThat(alarmDetailDto)
+                            .hasFieldOrPropertyWithValue("alarmId",account.getAccountId())
+                            .hasFieldOrPropertyWithValue("title", updateTitle)
+                            .hasFieldOrPropertyWithValue("doseCount", updateDoseCount)
+                            .hasFieldOrPropertyWithValue("email", account.getEmail())
+                            .hasFieldOrProperty("medicines"),
+                    () -> assertThat(alarmDetailDto.getMedicines()).allSatisfy(simpleMedicineDto -> {
+                                assertThat(simpleMedicineDto.getMedicineId()).isEqualTo(1L);
+                                assertThat(simpleMedicineDto.getItemSeq()).isEqualTo(200611524L);
+                                assertThat(simpleMedicineDto.getItemName()).isEqualTo("마도파정");
+                                assertThat(simpleMedicineDto.getItemImage()).isEqualTo("https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/148609543321800149");
+                                assertThat(simpleMedicineDto.getEtcOtcName()).isEqualTo("전문의약품");
+                                assertThat(simpleMedicineDto.getEntpName()).isEqualTo("(주)한국로슈");
+                            }
+                    )
+            );
+            verify(medicineRepository).findAllByMedicineIdIn(anyList());
+            verify(alarmRepository).findDetailsByAlarmId(anyLong());
+
+        }
+        @Test
+        @DisplayName("[실패] 수정된 찾은 약이 없는 경우")
+        public void givenWrongMedicineIds_whenModifyAlarm_themAlarmException(){
+            //given
+            final AlarmErrorCode errorCode = AlarmErrorCode.FOUND_MEDICINES_SIZE_IS_ZERO;
+            String updateTitle = "수정된 알람명";
+            int updateDoseCount = 10;
+            Account account = createAccount(1L, "joon@naver.com");
+            UpdateAlarmDto updateAlarmDto = createUpdateAlarmDto(updateTitle, updateDoseCount, List.of(1L));
+
+            List<Medicine> medicines = List.of(getMedicine());
+            Alarm alarm = createAlarm("알람명", 6, account, medicines, false, null);
+
+            when(medicineRepository.findAllByMedicineIdIn(anyList()))
+                    .thenReturn(List.of());
+            when(alarmRepository.findDetailsByAlarmId(anyLong()))
+                    .thenReturn(Optional.of(alarm));
+            //when
+            final AlarmException exception = assertThrows(AlarmException.class,
+                () -> alarmService.modifyAlarm(1L, account, updateAlarmDto)
+            );
+            //then
+            assertAll(
+                () -> assertThat(exception.getErrorCode()).isEqualTo(errorCode),
+                () -> assertThat(exception.getErrorCode().getDescription()).isEqualTo(errorCode.getDescription())
+            );
+            verify(medicineRepository).findAllByMedicineIdIn(anyList());
+            verify(alarmRepository).findDetailsByAlarmId(anyLong());
+        }
+    }
+    private Alarm createAlarm(String title, int doseCount, Account account, List<Medicine> medicines, boolean deleted, LocalDateTime deletedAt) {
+        Alarm alarm = Alarm.createAlarm(1L, title, doseCount, account, null, deleted, deletedAt);
         List<MedicineAlarm> medicineAlarms = medicines.stream().map(medicine -> MedicineAlarm.createMedicineAlarm(alarm, medicine)).toList();
         alarm.setCreateDate(LocalDateTime.of(2022 , 6, 1, 0,0));
         for (MedicineAlarm medicineAlarm : medicineAlarms) {

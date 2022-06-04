@@ -2,6 +2,7 @@ package com.smrp.smartmedicinealarm.controller;
 
 import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
+import com.smrp.smartmedicinealarm.dto.alarm.UpdateAlarmDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.error.code.AlarmErrorCode;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto.Request.createNewAlarmRequestDto;
+import static com.smrp.smartmedicinealarm.dto.alarm.UpdateAlarmDto.createUpdateAlarmDto;
 import static com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto.createSimpleMedicineDto;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -79,7 +81,7 @@ class AlarmControllerTest extends BaseControllerTest {
             verify(alarmService).addAlarm(any(Account.class), any(NewAlarmDto.Request.class));
         }
         @Test
-        @DisplayName("[실패][POST] 잘못된 약품 id로 인해 찾은 약 종류 갯수가 0 개인 인 경우")
+        @DisplayName("[실패][POST] 잘못된 약품 id로 인해 찾은 약 종류 갯수가 0 개인 인 경우 - FOUND_MEDICINES_SIZE_IS_ZERO")
         public void givenWrongMedicineIds_whenAlarmAdd_themAlarmException() throws Exception{
             //given
            AlarmErrorCode errorCode = AlarmErrorCode.FOUND_MEDICINES_SIZE_IS_ZERO;
@@ -248,7 +250,7 @@ class AlarmControllerTest extends BaseControllerTest {
         @DisplayName("[실패][DELETE] 알림을 이미 제거한 경우 - ALREADY_DELETED_ALARM")
         public void givenAlarmId_whenAlarmRemove_thenAlarmException() throws Exception{
             //given
-             AlarmErrorCode errorCode = AlarmErrorCode.ALREADY_DELETED_ALARM;
+            AlarmErrorCode errorCode = AlarmErrorCode.ALREADY_DELETED_ALARM;
             Account account = createAccount();
             Long deletedAlarmId = 1L;
             doThrow(new AlarmException(errorCode))
@@ -268,6 +270,86 @@ class AlarmControllerTest extends BaseControllerTest {
             ;
             verify(alarmService).removeAlarm(any(Account.class), anyLong());
 
+        }
+    }
+
+    @Nested
+    @DisplayName("[PUT] 알람 수정 API")
+    class WhenAlarmModify{
+        @Test
+        @DisplayName("[성공][PUT] 알림 수정 API")
+        public void givenAlarmIdAndUpdateAlarmDto_whenAlarmModify_thenReturnAlarmDetail() throws Exception{
+            //given
+            long alarmId = 1L;
+            String title = "알람명";
+            int doseCount = 6;
+            Account account = createAccount();
+            List<SimpleMedicineDto> medicines = List.of(
+                    createSimpleMedicineDto(1L, 200502447L, "쿨정", "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1Mxwka5v0jL", "일반의약품", "알파제약(주)"),
+                    createSimpleMedicineDto(2L, 200401321L, "속코정", "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147428089523200037", "일반의약품", "일양약품(주)")
+            );
+            when(alarmService.modifyAlarm(anyLong(),any(Account.class), any(UpdateAlarmDto.class)))
+                    .thenReturn(
+                            AlarmDetailDto.createAlarmDetailDto(alarmId, title, doseCount, account.getEmail(), medicines, LocalDate.of(2022,6,1))
+                    );
+
+            //when //then
+            mvc.perform(put("/api/v1/alarms/{alarmId}", alarmId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(
+                                    mapper.writeValueAsString(
+                                            createUpdateAlarmDto(title, doseCount, List.of(1L, 2L))
+                                    )
+                            ).with(
+                                    authentication(getAuthentication(account)))
+                    )
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.alarmId").value(1L))
+                    .andExpect(jsonPath("$.title").value(title))
+                    .andExpect(jsonPath("$.doseCount").value(doseCount))
+                    .andExpect(jsonPath("$.medicines[0].medicineId").exists())
+                    .andExpect(jsonPath("$.medicines[0].itemSeq").exists())
+                    .andExpect(jsonPath("$.medicines[0].itemName").exists())
+                    .andExpect(jsonPath("$.medicines[0].itemImage").exists())
+                    .andExpect(jsonPath("$.medicines[0].etcOtcName").exists())
+                    .andExpect(jsonPath("$._links.self").isNotEmpty())
+                    .andExpect(jsonPath("$._links.profile").isNotEmpty())
+            ;
+            verify(alarmService).modifyAlarm(anyLong(), any(Account.class), any(UpdateAlarmDto.class));
+        }
+
+        @Test
+        @DisplayName("[실패][PUT] 수정 한 알람에 약이 없는 경우 - FOUND_MEDICINES_SIZE_IS_ZERO")
+        public void givenWrongMedicineIds_whenAlarmModify_themAlarmException() throws Exception{
+            //given
+            AlarmErrorCode errorCode = AlarmErrorCode.FOUND_MEDICINES_SIZE_IS_ZERO;
+            String title = "알람명";
+            int doseCount = 6;
+            long wrongMedicineIds = 99999999999L;
+
+            Account account = createAccount();
+            when(alarmService.modifyAlarm(anyLong(), any(Account.class), any(UpdateAlarmDto.class)))
+                    .thenThrow(
+                            new AlarmException(errorCode)
+                    );
+
+            //when //then
+            mvc.perform(put("/api/v1/alarms/{alarmId}", wrongMedicineIds)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(
+                                    mapper.writeValueAsString(
+                                            createUpdateAlarmDto(title, doseCount, List.of(1L, 2L))
+                                    )
+                            ).with(
+                                    authentication(getAuthentication(account)))
+                    )
+                    .andDo(print())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errorCode").value(errorCode.toString()))
+                    .andExpect(jsonPath("$.errorMessage").value(errorCode.getDescription()))
+            ;
+            verify(alarmService).modifyAlarm(anyLong(), any(Account.class), any(UpdateAlarmDto.class));
         }
     }
 }

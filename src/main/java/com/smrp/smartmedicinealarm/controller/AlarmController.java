@@ -3,6 +3,8 @@ package com.smrp.smartmedicinealarm.controller;
 import com.smrp.smartmedicinealarm.dto.ResponseResult;
 import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
+import com.smrp.smartmedicinealarm.dto.alarm.UpdateAlarmDto;
+import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.service.alarm.AlarmService;
 import io.swagger.annotations.ApiOperation;
@@ -15,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -66,7 +69,11 @@ public class AlarmController {
                 linkTo(methodOn(AlarmController.class).alarmDetails(account, alarmId)).withSelfRel(),
                 Link.of(linkTo(SwaggerController.class) + "/#/alarm-controller/alarmDetailsGET").withRel("profile")
         );
-        alarmDetailDto.getMedicines().forEach(simpleMedicineDto ->
+        simpleMedicineDtoLinkAdd(alarmDetailDto.getMedicines());
+    }
+
+    private void simpleMedicineDtoLinkAdd(List<SimpleMedicineDto> medicines) {
+        medicines.forEach(simpleMedicineDto ->
                 simpleMedicineDto.add(
                         linkTo(methodOn(MedicineController.class).medicineDetails(simpleMedicineDto.getMedicineId())).withSelfRel()
                 ));
@@ -91,6 +98,27 @@ public class AlarmController {
                 linkTo(methodOn(AlarmController.class).alarmRemove(account, alarmId)).withSelfRel(),
                 Link.of(linkTo(SwaggerController.class) + "/#/alarm-controller/alarmRemoveDELETE").withRel("profile")
         );
+    }
+
+    @PutMapping("/{alarmId}")
+    @PreAuthorize("isAuthenticated()")
+    @ApiOperation(value = "약 알림 수정")
+    public ResponseEntity<?> alarmModify(
+            @PathVariable Long alarmId,
+            @AuthenticationPrincipal Account account,
+            @Valid @RequestBody UpdateAlarmDto updateAlarmDto
+    ){
+        AlarmDetailDto  alarmDetailDto = alarmService.modifyAlarm(alarmId, account, updateAlarmDto);
+        alarmModifyAddLink(alarmId, account, updateAlarmDto, alarmDetailDto);
+        return ResponseEntity.ok(alarmDetailDto);
+    }
+
+    private void alarmModifyAddLink(Long alarmId, Account account, UpdateAlarmDto updateAlarmDto, AlarmDetailDto alarmDetailDto) {
+        alarmDetailDto.add(
+                linkTo(methodOn(AlarmController.class).alarmModify(alarmId, account, updateAlarmDto)).withSelfRel(),
+                Link.of(linkTo(SwaggerController.class) + "/#/alarm-controller/alarmModifyPUT").withRel("profile")
+        );
+        simpleMedicineDtoLinkAdd(alarmDetailDto.getMedicines());
     }
 
 }

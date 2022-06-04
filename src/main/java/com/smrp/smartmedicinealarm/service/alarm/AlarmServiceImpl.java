@@ -3,6 +3,7 @@ package com.smrp.smartmedicinealarm.service.alarm;
 import com.smrp.smartmedicinealarm.dto.Alarm;
 import com.smrp.smartmedicinealarm.dto.alarm.AlarmDetailDto;
 import com.smrp.smartmedicinealarm.dto.alarm.NewAlarmDto;
+import com.smrp.smartmedicinealarm.dto.alarm.UpdateAlarmDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.error.code.AlarmErrorCode;
@@ -30,7 +31,7 @@ public class AlarmServiceImpl implements AlarmService{
     @Transactional
     public NewAlarmDto.Response addAlarm(Account account, NewAlarmDto.Request request) {
         // 약 목록 조회
-        List<Medicine> medicines = getMedicinesByIdIn(request);
+        List<Medicine> medicines = getMedicinesByIdIn(request.getMedicineIds());
 
         //알람 생성
         Alarm alarm = createAlarm(account, request, medicines);
@@ -67,6 +68,26 @@ public class AlarmServiceImpl implements AlarmService{
         alarmRemove(alarm);
     }
 
+    @Override
+    @Transactional
+    public AlarmDetailDto modifyAlarm(Long alarmId, Account account, UpdateAlarmDto updateAlarmDto) {
+        //알람 조회
+        Alarm alarm = getAlarmById(alarmId);
+
+        // 알람 사용자 접근 검증
+        validAlarmAccessAble(alarm, account);
+
+        alarmUpdate(alarm, updateAlarmDto);
+
+        return AlarmDetailDto.fromEntity(alarm);
+
+    }
+
+    private void alarmUpdate(Alarm alarm, UpdateAlarmDto updateAlarmDto) {
+        List<Medicine> medicines = getMedicinesByIdIn(updateAlarmDto.getMedicineIds());
+        alarm.update(updateAlarmDto.getTitle(), updateAlarmDto.getDoseCount(),medicines);
+    }
+
     private void alarmRemove(Alarm alarm) {
         if(alarm.isDeleted()){
             throw new AlarmException(AlarmErrorCode.ALREADY_DELETED_ALARM);
@@ -85,8 +106,8 @@ public class AlarmServiceImpl implements AlarmService{
                 .orElseThrow(() -> new AlarmException(AlarmErrorCode.NOF_FOUND_ALARM_ID));
     }
 
-    private List<Medicine> getMedicinesByIdIn(NewAlarmDto.Request request) {
-        List<Medicine> medicines = medicineRepository.findAllByMedicineIdIn(request.getMedicineIds());
+    private List<Medicine> getMedicinesByIdIn(List<Long> medicineIds) {
+        List<Medicine> medicines = medicineRepository.findAllByMedicineIdIn(medicineIds);
         if(medicines.size() <= 0){
             log.info("must not have medicines size zero");
             throw new AlarmException(AlarmErrorCode.FOUND_MEDICINES_SIZE_IS_ZERO);
