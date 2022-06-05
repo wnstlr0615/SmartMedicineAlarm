@@ -62,7 +62,7 @@ class BookmarkControllerTest extends BaseControllerTest{
                             createNewBookmarkResponseDto(account.getAccountId(), account.getEmail(), simpleMedicineDtos)
                     );
             //when //then
-            mvc.perform(post("/api/v1/accounts/me/bookmarks")
+            mvc.perform(post("/api/v1/bookmarks")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(
                                     mapper.writeValueAsString(
@@ -103,7 +103,7 @@ class BookmarkControllerTest extends BaseControllerTest{
             when(bookmarkService.addBookmark(any(Account.class), any(NewBookmarkDto.Request.class)))
                     .thenThrow(new UserException(errorCode));
             //when //then
-            mvc.perform(post("/api/v1/accounts/me/bookmarks")
+            mvc.perform(post("/api/v1/bookmarks")
                 .contentType(MediaType.APPLICATION_JSON)
                             .content(
                                     mapper.writeValueAsString(
@@ -133,7 +133,7 @@ class BookmarkControllerTest extends BaseControllerTest{
             when(bookmarkService.addBookmark(any(Account.class), any(NewBookmarkDto.Request.class)))
                     .thenThrow(new UserException(errorCode));
             //when //then
-            mvc.perform(post("/api/v1/accounts/me/bookmarks")
+            mvc.perform(post("/api/v1/bookmarks")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(
                                     mapper.writeValueAsString(
@@ -174,7 +174,7 @@ class BookmarkControllerTest extends BaseControllerTest{
                     );
 
             //when //then
-            mvc.perform(delete("/api/v1/accounts/me/bookmarks")
+            mvc.perform(delete("/api/v1/bookmarks")
                 .contentType(MediaType.APPLICATION_JSON)
                             .with(authentication(
                                             getAuthentication(account)

@@ -24,7 +24,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(value = "/api/v1/accounts/me/bookmarks")
+@RequestMapping(value = "/api/v1/bookmarks")
 public class BookmarkController {
     private final BookmarkService bookmarkService;
 
