@@ -40,23 +40,6 @@ public class BookmarkController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    @PreAuthorize("isAuthenticated()")
-    @ApiOperation(value = "즐겨찾기 목록 보기")
-    public ResponseEntity<?> findAllBookmark(@AuthenticationPrincipal Account account){
-        SimpleBookmarkDto simpleBookmarkDto = bookmarkService.findAllBookmark(account);
-        findAllBookmarkLinkAdd(account, simpleBookmarkDto);
-        return ResponseEntity.ok(simpleBookmarkDto);
-    }
-
-    private void findAllBookmarkLinkAdd(Account account, SimpleBookmarkDto simpleBookmarkDto) {
-        simpleBookmarkDto.add(
-                linkTo(methodOn(BookmarkController.class).findAllBookmark(account)).withSelfRel(),
-                Link.of(linkTo(SwaggerController.class) + "/#/bookmark-controller/findAllBookmarkGET").withRel("profile")
-        );
-        simpleMedicineDtoAddDetailLink(simpleBookmarkDto.getMedicines());
-
-    }
     @DeleteMapping
     @PreAuthorize("isAuthenticated()")
     @ApiOperation(value = "즐겨찾기 목록에서 제거", notes = "제거 요청시 제거하고 남은 즐겨찾기 목록 반환")

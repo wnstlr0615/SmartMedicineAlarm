@@ -144,46 +144,6 @@ class BookmarkServiceImplTest {
     }
 
     @Nested
-    @DisplayName("즐겨찾기 목록 보기")
-    class WhenFindAllBookmark{
-        @Test
-        @DisplayName("[성공] 즐겨찾기 목록 보기")
-        public void givenAccount_whenFindAllBookmark_thenReturnBookmarkList(){
-            //given
-            Account account = createAccount(AccountStatus.USE);
-            Medicine medicine = getMedicine();
-            account.addBookmark(Bookmark.createBookmark(account, medicine));
-            when(accountRepository.findDetailByAccountId(anyLong()))
-                    .thenReturn(
-                            Optional.of(
-                                    account
-                            )
-                    );
-
-            //when
-            SimpleBookmarkDto simpleBookmarkDto = bookmarkService.findAllBookmark(account);
-            //then
-            assertAll(
-                    () -> assertThat(simpleBookmarkDto)
-                            .hasFieldOrPropertyWithValue("accountId", account.getAccountId())
-                            .hasFieldOrPropertyWithValue("email", account.getEmail())
-                            .hasFieldOrProperty("medicines"),
-                    () -> assertThat(simpleBookmarkDto.getMedicines()).allSatisfy(simpleMedicineDto -> {
-                                assertThat(simpleMedicineDto.getMedicineId()).isEqualTo(1L);
-                                assertThat(simpleMedicineDto.getItemSeq()).isEqualTo(200611524L);
-                                assertThat(simpleMedicineDto.getItemName()).isEqualTo("마도파정");
-                                assertThat(simpleMedicineDto.getItemImage()).isEqualTo("https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/148609543321800149");
-                                assertThat(simpleMedicineDto.getEtcOtcName()).isEqualTo("전문의약품");
-                                assertThat(simpleMedicineDto.getEntpName()).isEqualTo("(주)한국로슈");
-                            }
-                    )
-
-            );
-            verify(accountRepository).findDetailByAccountId(eq(account.getAccountId()));
-        }
-    }
-
-    @Nested
     @DisplayName("즐겨찾기 목록에서 제거")
     class WhenRemoveBookmark{
         @Test
