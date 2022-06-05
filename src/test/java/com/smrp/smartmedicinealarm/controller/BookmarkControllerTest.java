@@ -6,7 +6,6 @@ import com.smrp.smartmedicinealarm.dto.bookmark.NewBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.bookmark.SimpleBookmarkDto;
 import com.smrp.smartmedicinealarm.dto.medicine.SimpleMedicineDto;
 import com.smrp.smartmedicinealarm.entity.account.Account;
-import com.smrp.smartmedicinealarm.entity.bookmark.Bookmark;
 import com.smrp.smartmedicinealarm.entity.medicine.Medicine;
 import com.smrp.smartmedicinealarm.entity.medicine.embedded.*;
 import com.smrp.smartmedicinealarm.error.code.UserErrorCode;
@@ -15,7 +14,6 @@ import com.smrp.smartmedicinealarm.service.bookmark.BookmarkService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -38,12 +36,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = BookmarkController.class)
-@AutoConfigureMockMvc
 class BookmarkControllerTest extends BaseControllerTest{
     @MockBean
     BookmarkService bookmarkService;
@@ -64,7 +62,7 @@ class BookmarkControllerTest extends BaseControllerTest{
                             createNewBookmarkResponseDto(account.getAccountId(), account.getEmail(), simpleMedicineDtos)
                     );
             //when //then
-            mvc.perform(post("/api/v1/accounts/me/bookmarks")
+            mvc.perform(post("/api/v1/bookmarks")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(
                                     mapper.writeValueAsString(
@@ -105,7 +103,7 @@ class BookmarkControllerTest extends BaseControllerTest{
             when(bookmarkService.addBookmark(any(Account.class), any(NewBookmarkDto.Request.class)))
                     .thenThrow(new UserException(errorCode));
             //when //then
-            mvc.perform(post("/api/v1/accounts/me/bookmarks")
+            mvc.perform(post("/api/v1/bookmarks")
                 .contentType(MediaType.APPLICATION_JSON)
                             .content(
                                     mapper.writeValueAsString(
@@ -135,7 +133,7 @@ class BookmarkControllerTest extends BaseControllerTest{
             when(bookmarkService.addBookmark(any(Account.class), any(NewBookmarkDto.Request.class)))
                     .thenThrow(new UserException(errorCode));
             //when //then
-            mvc.perform(post("/api/v1/accounts/me/bookmarks")
+            mvc.perform(post("/api/v1/bookmarks")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(
                                     mapper.writeValueAsString(
@@ -155,53 +153,7 @@ class BookmarkControllerTest extends BaseControllerTest{
         }
 
     }
-    @Nested
-    @DisplayName("[GET]즐겨찾기 목록 보기")
-    class WhenFindAllBookmark{
-        @Test
-        @DisplayName("[성공][GET] 즐겨찾기 목록 보기")
-        public void givenAccount_whenFindAllBookmark_thenReturnBookmarkList() throws Exception{
-            //given
-            Account account = createAccount();
-            Medicine medicine = getMedicine();
-            List<SimpleMedicineDto> medicines = List.of(
-                    SimpleMedicineDto.fromEntity(medicine)
-            );
-            account.addBookmark(Bookmark.createBookmark(account, medicine));
-            when(bookmarkService.findAllBookmark(any(Account.class)))
-                    .thenReturn(
-                            SimpleBookmarkDto.createSimpleBookmarkDto(account.getAccountId(), account.getEmail(), medicines)
-                    );
-            //when //then
-            mvc.perform(get("/api/v1/accounts/me/bookmarks")
-                .contentType(MediaType.APPLICATION_JSON)
-                            .with(
-                                    authentication(
-                                            getAuthentication(
-                                                    account
-                                            )
-                                    )
-                            )
-            )
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(handler().methodName("findAllBookmark"))
-                .andExpect(handler().handlerType(BookmarkController.class))
-                .andExpect(jsonPath("$.accountId").value(account.getAccountId()))
-                .andExpect(jsonPath("$.email").value(account.getEmail()))
-                .andExpect(jsonPath("$.medicines[0].medicineId").exists())
-                .andExpect(jsonPath("$.medicines[0].itemSeq").exists())
-                .andExpect(jsonPath("$.medicines[0].itemName").exists())
-                .andExpect(jsonPath("$.medicines[0].itemImage").exists())
-                .andExpect(jsonPath("$.medicines[0].etcOtcName").exists())
-                .andExpect(jsonPath("$.medicines[0].entpName").exists())
-                .andExpect(jsonPath("$.medicines[0]._links.self.href").exists())
-                .andExpect(jsonPath("$._links.self").isNotEmpty())
-                .andExpect(jsonPath("$._links.profile").isNotEmpty())
-            ;
-            verify(bookmarkService).findAllBookmark(any(Account.class));
-        }
-    }
+
 
     @Nested
     @DisplayName("[DELETE] 즐겨찾기 목록에서 제거 API")
@@ -222,7 +174,7 @@ class BookmarkControllerTest extends BaseControllerTest{
                     );
 
             //when //then
-            mvc.perform(delete("/api/v1/accounts/me/bookmarks")
+            mvc.perform(delete("/api/v1/bookmarks")
                 .contentType(MediaType.APPLICATION_JSON)
                             .with(authentication(
                                             getAuthentication(account)
