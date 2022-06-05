@@ -12,5 +12,5 @@ public interface BookmarkService {
     SimpleBookmarkDto findAllBookmark(Account account);
 
     /**약 즐겨찾기 목록에서 약 제거*/
-    SimpleBookmarkDto bookmarkRemove(Account account, RemoveBookmarkDto removeBookmarkDto);
+    SimpleBookmarkDto removeBookmark(Account account, RemoveBookmarkDto removeBookmarkDto);
 }
