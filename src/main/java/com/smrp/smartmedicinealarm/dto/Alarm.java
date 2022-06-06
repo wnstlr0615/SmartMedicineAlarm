@@ -84,7 +84,7 @@ public class Alarm extends BaseTimeEntity {
         }
 
     }
-
+    //== 비즈니스 메서드 ==//
     public void remove() {
         if(!deleted) {
             this.deleted = true;
@@ -101,6 +101,11 @@ public class Alarm extends BaseTimeEntity {
         this.medicineAlarms.clear();
         for (MedicineAlarm medicineAlarm : medicineAlarms) {
             addMedicineAlarm(medicineAlarm);
+        }
+    }
+    public void takeDose(){
+        if(leftOverDoseCount > 0){
+            leftOverDoseCount--;
         }
     }
 }
