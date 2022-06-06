@@ -17,4 +17,5 @@ public interface AlarmService {
 
     /** 알람 수정하기 */
     AlarmDetailDto modifyAlarm(Long alarmId, Account account, UpdateAlarmDto updateAlarmDto);
+
 }

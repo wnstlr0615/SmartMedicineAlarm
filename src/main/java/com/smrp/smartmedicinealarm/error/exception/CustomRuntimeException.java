@@ -19,4 +19,15 @@ public abstract class CustomRuntimeException extends RuntimeException {
         this.errorCode = errorCode;
         this.errorMessage =errorCode.getDescription();
     }
+
+    public CustomRuntimeException(ErrorCode errorCode, Throwable throwable) {
+        super(errorCode.getDescription(), throwable);
+        this.errorCode = errorCode;
+        this.errorMessage =errorCode.getDescription();
+    }
+    public CustomRuntimeException(ErrorCode errorCode, String errorMessage, Throwable throwable) {
+        super(errorMessage, throwable);
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+    }
 }
