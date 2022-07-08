@@ -35,7 +35,7 @@ public class Alarm extends BaseTimeEntity {
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<MedicineAlarm> medicineAlarms;
 
-    private boolean deleted = false;
+    private boolean deleted;
 
     private LocalDateTime deletedAt;
 

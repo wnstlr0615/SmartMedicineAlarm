@@ -2,7 +2,7 @@ package com.smrp.smartmedicinealarm.application.job;
 
 import com.smrp.smartmedicinealarm.dto.Alarm;
 import com.smrp.smartmedicinealarm.repository.alarm.AlarmRepository;
-import com.smrp.smartmedicinealarm.service.notification.LogSendService;
+import com.smrp.smartmedicinealarm.service.notification.SendService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -15,6 +15,7 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
 import org.springframework.batch.item.database.JpaItemWriter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +32,7 @@ public class MedicineAlarmNotificationConfig {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final AlarmRepository alarmRepository;
-    private final LogSendService sendService;
+    private final SendService sendService;
     private final EntityManagerFactory entityManagerFactory;
 
     @Bean

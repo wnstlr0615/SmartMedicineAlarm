@@ -7,6 +7,7 @@ import com.smrp.smartmedicinealarm.error.exception.MailSenderException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailParseException;
@@ -21,7 +22,7 @@ import javax.mail.internet.InternetAddress;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MailComponent {
+public class MailComponent{
     private final JavaMailSender sender;
     private final MailProperties mailProperties;
 

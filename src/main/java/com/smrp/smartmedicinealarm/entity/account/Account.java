@@ -19,7 +19,7 @@ public class Account extends BaseTimeEntity {
     private Long accountId;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Bookmark> bookmarks = new LinkedHashSet<>();
+    private Set<Bookmark> bookmarks;
 
 
     @Column(name = "email", nullable = false)
