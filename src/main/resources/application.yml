@@ -1,0 +1,98 @@
+jwt:
+  accessExpiredTime: 1h
+  refreshExpiredTime: 7d
+  key: joon
+spring:
+  profiles:
+    #active: local, oauth
+    active: local
+  batch:
+    job:
+      names: ${job.name:NONE}
+  mail:
+    username: wnstlr0615@gmail.com
+    password:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5433/smrp
+    username: postgres
+    password: 3621
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_batch_fetch_size: 1000
+        format_sql: true
+  batch:
+    jdbc:
+      initialize-schema: never
+  redis:
+    port: 6379
+  sql:
+    init:
+      data-locations: classpath:data/dev/data.sql
+      schema-locations: classpath:data/dev/schema.sql
+      mode: always
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:postgresql://localhost:5433/smrp
+    username: postgres
+    password: 3621
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        default_batch_fetch_size: 1000
+        format_sql: true
+  batch:
+    job:
+      names: ${job.name:NONE}
+    jdbc:
+      initialize-schema: always
+  redis:
+    port: 6379
+filePath: medicine.csv
+#logging.level:
+  #org.hibernate.SQL: debug
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  redis:
+    host: localhost
+    port: 6381
+  datasource:
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    url: jdbc:h2:tcp://localhost/~/smrp
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:data/test/schema-test.sql
+      data-locations: classpath:data/test/data-test.sql

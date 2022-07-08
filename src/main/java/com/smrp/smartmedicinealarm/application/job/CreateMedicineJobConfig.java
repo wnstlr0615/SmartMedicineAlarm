@@ -56,7 +56,8 @@ public class CreateMedicineJobConfig {
 
 
 
-    private ItemReader<? extends Medicine> csvFileReader(String filePath) throws Exception {
+
+    public ItemReader<? extends Medicine> csvFileReader(String filePath) throws Exception {
         DefaultLineMapper<Medicine> lineMapper = new DefaultLineMapper<>();
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
         tokenizer.setNames(
@@ -78,7 +79,13 @@ public class CreateMedicineJobConfig {
         return csfFileReader;
     }
 
-    private FieldSetMapper<Medicine> getMedicineMapper() {
+
+    public ItemWriter<? super Medicine> jpaWriter() {
+        return (medicines) -> medicines.forEach(medicineRepository::save
+        );
+    }
+
+    public FieldSetMapper<Medicine> getMedicineMapper() {
         return (fs) ->{
             Long itemSeq = fs.readLong("itemSeq");
             String itemName = fs.readString("itemName");
@@ -101,10 +108,6 @@ public class CreateMedicineJobConfig {
                     medicineCompany, medicineIdentification, medicineLine, medicineColor, markCode, medicineDate
             );
         };
-    }
-    private ItemWriter<? super Medicine> jpaWriter() {
-        return (medicines) -> medicines.forEach(medicineRepository::save
-        );
     }
 
     private MedicineIdentification getMedicineIdentification(FieldSet fs) {
